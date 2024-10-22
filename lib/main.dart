@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tutormatch/src/ui/screens/home_studente.dart';
+import 'package:tutormatch/src/ui/screens/home_tutor.dart';
+import 'package:tutormatch/src/viewmodels/annuncio_view_model.dart';
 import 'package:tutormatch/src/viewmodels/auth_view_model.dart'; // Assicurati che questa classe esista
 import 'package:tutormatch/src/ui/screens/main_page.dart'; // Schermata principale
 import 'package:tutormatch/src/ui/screens/login_page.dart'; // Schermata di login
@@ -24,6 +27,7 @@ class MyApp extends StatelessWidget {
       providers: [
         // Registriamo il ViewModel di autenticazione qui
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => AnnuncioViewModel()),
       ],
       child: MaterialApp(
         title: 'TutorMatch',
@@ -47,6 +51,8 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => const MainPage(),
           '/login': (context) => const LoginPage(),
+          "/home_tutor": (context) => const HomeTutor(),
+          "/home_studente": (context) => const HomeStudente()
         },
       ),
     );

@@ -101,10 +101,19 @@ class _LoginPageState extends State<LoginPage> {
 
                         // In base al ruolo, reindirizza alla schermata corretta
                         if (isTutor) {
-                          Navigator.pushReplacementNamed(context, '/home_tutor');
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/home_tutor',
+                            arguments: userId, // Passa l'ID utente
+                          );
                         } else {
-                          Navigator.pushReplacementNamed(context, '/home_studente');
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/home_studente',
+                            arguments: userId, // Passa l'ID utente
+                          );
                         }
+
                       } else {
                         setState(() {
                           errorMessage = 'Errore durante il login. Riprova.';

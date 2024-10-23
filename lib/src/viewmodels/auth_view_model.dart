@@ -18,7 +18,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print("Errore nel login: $e");
-      throw e; // Rilancia l'errore per gestirlo nella UI
+      throw e;  // Rilancia l'errore per gestirlo nella UI
     }
   }
 

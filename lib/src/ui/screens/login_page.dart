@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tutormatch/src/viewmodels/auth_view_model.dart'; // Importa il ViewModel
+import 'package:tutormatch/src/viewmodels/auth_view_model.dart';
+
+import '../../viewmodels/profilo_view_model.dart'; // Importa il ViewModel
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -97,22 +99,29 @@ class _LoginPageState extends State<LoginPage> {
 
                       if (userId != null) {
                         // Recupera il ruolo dell'utente
-                        bool isTutor = await authViewModel.getUserRole(userId);
+                        bool ruolo = await authViewModel.getUserRole(userId);
 
                         // In base al ruolo, reindirizza alla schermata corretta
-                        if (isTutor) {
+                        if (ruolo) {
                           Navigator.pushReplacementNamed(
                             context,
-                            '/home_tutor',
-                            arguments: userId, // Passa l'ID utente
+                            '/main_page_tutor',
+                            arguments: {
+                              'userId': userId,
+                              'ruolo': ruolo
+                            },
                           );
                         } else {
                           Navigator.pushReplacementNamed(
                             context,
-                            '/home_studente',
-                            arguments: userId, // Passa l'ID utente
+                            '/main_page_studente',
+                            arguments: {
+                              'userId': userId,
+                              'ruolo': ruolo
+                            },
                           );
                         }
+
 
                       } else {
                         setState(() {

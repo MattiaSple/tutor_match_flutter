@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tutormatch/src/ui/screens/home_studente.dart';
-import 'package:tutormatch/src/ui/screens/home_tutor.dart';
+import 'package:tutormatch/src/ui/screens/main_page_studente.dart';
+import 'package:tutormatch/src/ui/screens/main_page_tutor.dart';
 import 'package:tutormatch/src/viewmodels/annuncio_view_model.dart';
-import 'package:tutormatch/src/viewmodels/auth_view_model.dart'; // Assicurati che questa classe esista
-import 'package:tutormatch/src/ui/screens/main_page.dart'; // Schermata principale
-import 'package:tutormatch/src/ui/screens/login_page.dart'; // Schermata di login
+import 'package:tutormatch/src/viewmodels/auth_view_model.dart';
+import 'package:tutormatch/src/ui/screens/main_page.dart';
+import 'package:tutormatch/src/ui/screens/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:tutormatch/src/core/firebase_options.dart'; // Configurazione Firebase
+import 'package:tutormatch/src/core/firebase_options.dart';
+import 'package:tutormatch/src/viewmodels/home_studente_view_model.dart';
+import 'package:tutormatch/src/viewmodels/prenotazioni_view_model.dart';
+import 'package:tutormatch/src/viewmodels/profilo_view_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +31,9 @@ class MyApp extends StatelessWidget {
         // Registriamo il ViewModel di autenticazione qui
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => AnnuncioViewModel()),
+        ChangeNotifierProvider(create: (_) => PrenotazioniViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfiloViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeStudenteViewModel())
       ],
       child: MaterialApp(
         title: 'TutorMatch',
@@ -40,10 +46,10 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.white, // Colore del testo dell'appBar
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4D7881),
-              foregroundColor: Colors.white
-            )
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4D7881),
+                  foregroundColor: Colors.white
+              )
           ),
         ),
 
@@ -51,8 +57,9 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => const MainPage(),
           '/login': (context) => const LoginPage(),
-          "/home_tutor": (context) => const HomeTutor(),
-          "/home_studente": (context) => const HomeStudente()
+          // Usa le nuove schermate con IndexedStack e BottomNavigationBar
+          "/main_page_tutor": (context) => const MainPageTutor(),
+          "/main_page_studente": (context) => const MainPageStudente(),
         },
       ),
     );

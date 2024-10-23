@@ -3,14 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:tutormatch/src/viewmodels/annuncio_view_model.dart';
 
 class HomeTutor extends StatefulWidget {
-  const HomeTutor({super.key});
+  final String userId;
+  final bool ruolo;
+
+  const HomeTutor({required this.userId, required this.ruolo, super.key});
 
   @override
   _HomeTutorState createState() => _HomeTutorState();
 }
 
 class _HomeTutorState extends State<HomeTutor> {
-  int _selectedIndex = 0;
   String? selectedMateria;
   List<String> materie = ['Matematica', 'Fisica', 'Informatica'];
 
@@ -18,20 +20,15 @@ class _HomeTutorState extends State<HomeTutor> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Recupera l'ID utente passato dalla LoginPage
-    final userId = ModalRoute.of(context)?.settings.arguments as String?;
-
-    if (userId != null) {
-      // Chiama la funzione per recuperare gli annunci dell'utente
-      final annuncioViewModel = Provider.of<AnnuncioViewModel>(context, listen: false);
-      annuncioViewModel.getAnnunciByUserId(userId);
-    }
+    // Chiama la funzione per recuperare gli annunci dell'utente
+    final annuncioViewModel = Provider.of<AnnuncioViewModel>(context, listen: false);
+    annuncioViewModel.getAnnunciByUserId(widget.userId);
   }
 
   // Funzione per creare l'annuncio
-  void _creaAnnuncio(String userId, AnnuncioViewModel annuncioViewModel) {
+  void _creaAnnuncio(AnnuncioViewModel annuncioViewModel) {
     if (selectedMateria != null) {
-      annuncioViewModel.creaAnnuncio(userId, selectedMateria!);
+      annuncioViewModel.creaAnnuncio(widget.userId, selectedMateria!);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Annuncio creato con successo per materia: $selectedMateria')),
       );
@@ -53,7 +50,6 @@ class _HomeTutorState extends State<HomeTutor> {
   @override
   Widget build(BuildContext context) {
     final annuncioViewModel = Provider.of<AnnuncioViewModel>(context);
-    final userId = ModalRoute.of(context)?.settings.arguments as String;
 
     return Scaffold(
       appBar: AppBar(
@@ -84,7 +80,7 @@ class _HomeTutorState extends State<HomeTutor> {
                 }).toList(),
               ),
               ElevatedButton(
-                onPressed: () => _creaAnnuncio(userId, annuncioViewModel),
+                onPressed: () => _creaAnnuncio(annuncioViewModel),
                 child: const Text('Crea Annuncio'),
               ),
               Flexible(
@@ -98,7 +94,7 @@ class _HomeTutorState extends State<HomeTutor> {
                       trailing: IconButton(
                         icon: const Icon(Icons.delete),
                         onPressed: () {
-                          _eliminaAnnuncio(annuncio['id'], annuncioViewModel);
+                          _eliminaAnnuncio(annuncio["id"], annuncioViewModel);
                         },
                       ),
                     );
@@ -108,29 +104,6 @@ class _HomeTutorState extends State<HomeTutor> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profilo',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Impostazioni',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF4D7881),
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
       ),
     );
   }

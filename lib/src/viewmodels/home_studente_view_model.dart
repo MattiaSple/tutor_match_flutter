@@ -18,9 +18,16 @@ class HomeStudenteViewModel extends ChangeNotifier {
 
     try {
       print("Inizio caricamento utente...");
-      Map<String, dynamic> utenteData = (await _firebaseUtil.getUserById(userId)) as Map<String, dynamic>;
-      _utente = Utente.fromMap(utenteData, userId);
-      print("Utente caricato: ${_utente!.nome} ${_utente!.cognome}");
+      // Modifica qui: otteniamo il documento e chiamiamo il metodo data() per ottenere la mappa
+      var snapshot = await _firebaseUtil.getUserById(userId);
+      Map<String, dynamic>? utenteData = snapshot.data() as Map<String, dynamic>?; // Usa .data() per accedere ai dati
+
+      if (utenteData != null) {
+        _utente = Utente.fromMap(utenteData, userId);
+        print("Utente caricato: ${_utente!.nome} ${_utente!.cognome}");
+      } else {
+        print("Dati dell'utente non trovati.");
+      }
 
       // Utilizza addPostFrameCallback per notificare i listener dopo il rendering
       WidgetsBinding.instance.addPostFrameCallback((_) {

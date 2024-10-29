@@ -14,17 +14,16 @@ class CalendarioViewModel extends ChangeNotifier {
 
 
   void listenToFasceOrarie(String tutorId, bool ruolo) {
+    // Se esiste un listener attivo, cancellalo prima di crearne uno nuovo
+    _fasceOrarieSubscription?.cancel();
 
-    if (_fasceOrarieSubscription != null) {
-      print("Listener già attivo, non ne viene creato uno nuovo.");
-      return; // Esce senza creare un nuovo listener
-    }
-
-    // Ascolta le fasce orarie in tempo reale
+    // Crea un nuovo listener per le fasce orarie in base al nuovo tutorId
     _fasceOrarieSubscription = _firebaseUtil
-        .getFasceOrarieStreamByTutorId(tutorId,ruolo)
+        .getFasceOrarieStreamByTutorId(tutorId, ruolo)
         .listen((snapshot) {
       print("Listener attivato per un aggiornamento nel database.");
+
+      // Aggiorna la lista delle fasce orarie
       fasceOrarie = snapshot.docs
           .map((doc) => Calendario.fromFirestore(doc.data() as Map<String, dynamic>))
           .toList();
@@ -37,6 +36,7 @@ class CalendarioViewModel extends ChangeNotifier {
       notifyListeners();
     });
   }
+
 
   @override
   void dispose() {

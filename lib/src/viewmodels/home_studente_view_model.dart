@@ -10,33 +10,38 @@ class HomeStudenteViewModel extends ChangeNotifier {
   Utente? get utente => _utente;
   bool get isLoading => _isLoading;
 
-  // Funzione per caricare l'utente
+  Map<String, String> _tutorNomi = {}; // Map per memorizzare i nomi dei tutor
+
+  Map<String, String> get tutorNomi => _tutorNomi;
+
+  // Funzione per caricare l'utente e recuperare i nomi dei tutor da valutare
   Future<void> caricaUtente(String userId) async {
     if (_isLoading) return; // Evita chiamate ripetute
 
     _isLoading = true;
 
     try {
-      print("Inizio caricamento utente...");
-      // Modifica qui: otteniamo il documento e chiamiamo il metodo data() per ottenere la mappa
       var snapshot = await _firebaseUtil.getUserById(userId);
-      Map<String, dynamic>? utenteData = snapshot.data() as Map<String, dynamic>?; // Usa .data() per accedere ai dati
+      Map<String, dynamic>? utenteData = snapshot.data() as Map<String, dynamic>?;
 
       if (utenteData != null) {
         _utente = Utente.fromMap(utenteData, userId);
-        print("Utente caricato: ${_utente!.nome} ${_utente!.cognome}");
+
+        // Carica i nomi dei tutor da valutare
+        for (String tutorId in _utente!.tutorDaValutare) {
+          String nomeCognome = await _firebaseUtil.getNomeDaRef(tutorId);
+          _tutorNomi[tutorId] = nomeCognome;
+        }
       } else {
         print("Dati dell'utente non trovati.");
       }
 
-      // Utilizza addPostFrameCallback per notificare i listener dopo il rendering
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _isLoading = false;
         notifyListeners();
       });
     } catch (e) {
       print("Errore durante il caricamento dell'utente: $e");
-      // Anche in caso di errore, aggiungi il post frame callback per aggiornare lo stato
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _isLoading = false;
         notifyListeners();
@@ -44,7 +49,23 @@ class HomeStudenteViewModel extends ChangeNotifier {
     }
   }
 
-  List<String> get tutorDaValutare {
-    return _utente?.tutorDaValutare ?? [];
+  // Funzione per salvare il feedback al tutor e rimuoverlo dalla lista tutorDaValutare
+  Future<void> salvaFeedback(String tutorId, int feedback) async {
+    try {
+      // Aggiungi il feedback al profilo del tutor
+      await _firebaseUtil.aggiungiFeedback(tutorId, feedback);
+
+      // Rimuovi il tutor dalla lista locale
+      _utente!.tutorDaValutare.remove(tutorId);
+
+      // Aggiorna il campo tutorDaValutare nel profilo dell'utente nel database
+      await _firebaseUtil.aggiornaTutorDaValutare(_utente!.userId, _utente!.tutorDaValutare);
+
+      notifyListeners();
+    } catch (e) {
+      print("Errore durante il salvataggio del feedback: $e");
+    }
   }
 }
+
+

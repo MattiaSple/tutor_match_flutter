@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tutormatch/src/viewmodels/auth_view_model.dart';
 
-import '../../viewmodels/profilo_view_model.dart'; // Importa il ViewModel
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

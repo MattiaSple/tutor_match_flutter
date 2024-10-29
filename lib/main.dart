@@ -8,16 +8,19 @@ import 'package:tutormatch/src/ui/screens/main_page.dart';
 import 'package:tutormatch/src/ui/screens/login_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:tutormatch/src/core/firebase_options.dart';
+import 'package:tutormatch/src/viewmodels/calendario_view_model.dart';
 import 'package:tutormatch/src/viewmodels/home_studente_view_model.dart';
+import 'package:tutormatch/src/viewmodels/in_chat_view_model.dart';
 import 'package:tutormatch/src/viewmodels/prenotazioni_view_model.dart';
 import 'package:tutormatch/src/viewmodels/profilo_view_model.dart';
+import 'package:tutormatch/src/viewmodels/chat_view_model.dart';
+import 'package:tutormatch/src/viewmodels/ricerca_tutor_view_model.dart'; // Aggiungi l'import per ChatViewModel
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform, // Inizializza Firebase
   );
-
   runApp(const MyApp());
 }
 
@@ -28,12 +31,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Registriamo il ViewModel di autenticazione qui
+        // Registriamo il ViewModel di autenticazione e gli altri ViewModel qui
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => AnnuncioViewModel()),
         ChangeNotifierProvider(create: (_) => PrenotazioniViewModel()),
         ChangeNotifierProvider(create: (_) => ProfiloViewModel()),
-        ChangeNotifierProvider(create: (_) => HomeStudenteViewModel())
+        ChangeNotifierProvider(create: (_) => HomeStudenteViewModel()),
+        ChangeNotifierProvider(create: (_) => ChatViewModel()), // Aggiungi il ChatViewModel qui
+        ChangeNotifierProvider(create: (_) => InChatViewModel()),
+        ChangeNotifierProvider(create: (_) => CalendarioViewModel()),
+        ChangeNotifierProvider(create: (_) => RicercaTutorViewModel()),
       ],
       child: MaterialApp(
         title: 'TutorMatch',

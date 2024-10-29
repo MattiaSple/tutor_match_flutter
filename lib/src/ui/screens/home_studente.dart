@@ -13,11 +13,11 @@ class HomeStudente extends StatefulWidget {
 }
 
 class _HomeStudenteState extends State<HomeStudente> {
+  Map<String, int> selectedFeedback = {}; // Mappa per tracciare il feedback selezionato per ogni tutor
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Carichiamo i dati solo se non sono stati ancora caricati
     final homeStudenteViewModel = Provider.of<HomeStudenteViewModel>(context, listen: false);
     homeStudenteViewModel.caricaUtente(widget.userId);
   }
@@ -31,16 +31,14 @@ class _HomeStudenteState extends State<HomeStudente> {
       body: Consumer<HomeStudenteViewModel>(
         builder: (context, homeStudenteViewModel, child) {
           if (homeStudenteViewModel.isLoading) {
-            // Mostra il loader finché i dati non sono stati caricati
             return const Center(child: CircularProgressIndicator());
           }
 
           if (homeStudenteViewModel.utente == null) {
-            // In caso di errore o assenza di dati
             return const Center(child: Text('Errore nel caricamento del profilo'));
           }
 
-          final tutorDaValutare = homeStudenteViewModel.tutorDaValutare;
+          final tutorDaValutare = homeStudenteViewModel.tutorNomi;
 
           return Column(
             children: [
@@ -53,14 +51,47 @@ class _HomeStudenteState extends State<HomeStudente> {
                   child: ListView.builder(
                     itemCount: tutorDaValutare.length,
                     itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(tutorDaValutare[index]),
-                        trailing: ElevatedButton(
-                          onPressed: () {
-                            // Qui potresti implementare la funzione di valutazione del tutor
-                          },
-                          child: const Text('Valuta'),
-                        ),
+                      String tutorId = tutorDaValutare.keys.elementAt(index);
+                      String nomeTutor = tutorDaValutare[tutorId] ?? '';
+
+                      // Imposta il valore iniziale a 1 se non è già stato selezionato un feedback
+                      selectedFeedback[tutorId] = selectedFeedback[tutorId] ?? 1;
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: Text(nomeTutor, style: const TextStyle(fontSize: 16))),
+                          DropdownButton<int>(
+                            value: selectedFeedback[tutorId],
+                            items: List.generate(5, (i) => i + 1).map((int value) {
+                              return DropdownMenuItem<int>(
+                                value: value,
+                                child: Text('$value'),
+                              );
+                            }).toList(),
+                            onChanged: (newValue) {
+                              setState(() {
+                                selectedFeedback[tutorId] = newValue!;
+                              });
+                            },
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              // Salva il feedback quando premi il bottone
+                              await homeStudenteViewModel.salvaFeedback(tutorId, selectedFeedback[tutorId]!);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Feedback salvato!')),
+                              );
+
+                              setState(() {
+                                // Rimuovi il tutor dalla lista una volta valutato
+                                tutorDaValutare.remove(tutorId);
+                              });
+                            },
+                            child: const Text('Valuta'),
+                          ),
+                        ],
                       );
                     },
                   ),

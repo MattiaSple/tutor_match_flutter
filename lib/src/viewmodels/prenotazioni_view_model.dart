@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tutormatch/src/core/firebase_util.dart';
@@ -7,32 +9,50 @@ class PrenotazioniViewModel extends ChangeNotifier {
   final FirebaseUtil _firebaseUtil = FirebaseUtil();
   List<Prenotazione> _prenotazioni = [];
   List<Prenotazione> get prenotazioni => _prenotazioni;
-
-  // Variabile di stato per il caricamento
   bool isLoading = false;
+  StreamSubscription? _prenotazioniSubscription; // Per gestire il listener
 
-  Future<void> caricaPrenotazioni(String userId, bool isTutor) async {
-    isLoading = true;
-    notifyListeners();
+  void listenToPrenotazioni(String userId, bool ruolo) {
+    // Controlla se c'è già un listener attivo
+    if (_prenotazioniSubscription != null) {
+      print("Listener già attivo, non ne viene creato uno nuovo.");
+      return; // Esce senza creare un nuovo listener
+    }
 
+    // Ottieni lo stream di prenotazioni filtrato per utente e ruolo
+    _prenotazioniSubscription = _firebaseUtil
+        .getPrenotazioniStreamByUserId(userId, ruolo)
+        .listen((snapshot) {
+      _prenotazioni = snapshot.docs
+          .map((doc) => Prenotazione.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      notifyListeners(); // Notifica l'interfaccia che i dati sono cambiati
+    }, onError: (error) {
+      print("Errore nell'ascolto delle prenotazioni: $error");
+    });
+  }
+
+
+  @override
+  void dispose() {
+    _prenotazioniSubscription?.cancel(); // Cancella il listener quando l'oggetto viene distrutto
+    _prenotazioniSubscription = null; // Imposta a null per consentire la creazione di nuovi listener in futuro
+    super.dispose();
+  }
+
+
+
+  Future<void> creaPrenotazioni(String userId, String tutorId, String annuncioId, List<String> fasceSelezionate) async {
     try {
-      List<Map<String, dynamic>> prenotazioniData = await _firebaseUtil.getPrenotazioniByUserId(userId, isTutor);
-
-      _prenotazioni = prenotazioniData.map((data) {
-        return Prenotazione(
-          annuncioRef: (data['annuncioRef'] as DocumentReference).id,
-          tutorRef: data['tutorRef'] as String,
-          studenteRef: data['studenteRef'] as String,
-          fasciaCalendarioRef: (data['fasciaCalendarioRef'] as DocumentReference).id,
-        );
-      }).toList();
+      // Richiama la funzione nel FirebaseUtil e passa tutti i parametri necessari
+      await FirebaseUtil().creaPrenotazioniBatch(userId, tutorId, annuncioId, fasceSelezionate);
     } catch (e) {
-      print("Errore nel caricamento delle prenotazioni: $e");
-    } finally {
-      isLoading = false;
-      notifyListeners();
+      print("Errore durante la creazione delle prenotazioni: $e");
+      // Gestisci eventuali errori
     }
   }
+
 
   Future<String> getMateriaFromAnnuncio(String annuncioId) async {
     try {
@@ -53,16 +73,16 @@ class PrenotazioniViewModel extends ChangeNotifier {
     }
   }
 
-  // Metodo per eliminare una prenotazione confrontando la fasciaCalendarioRef
+
+  // Metodo per eliminare una prenotazione e aggiornare lo stato in Calendario
   Future<void> eliminaPrenotazione(String fasciaCalendarioRef) async {
     try {
+      // Chiama Firestore per eliminare la prenotazione
       await _firebaseUtil.eliminaPrenotazioneByFascia(fasciaCalendarioRef);
-
-      _prenotazioni.removeWhere((prenotazione) => prenotazione.fasciaCalendarioRef == fasciaCalendarioRef);
-
-      notifyListeners();
     } catch (e) {
       print("Errore durante l'eliminazione della prenotazione: $e");
     }
   }
+
+
 }

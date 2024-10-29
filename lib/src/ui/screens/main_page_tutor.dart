@@ -3,7 +3,8 @@ import 'package:tutormatch/src/ui/screens/home_tutor.dart';
 import 'package:tutormatch/src/ui/screens/prenotazioni_page.dart';
 import 'package:tutormatch/src/ui/screens/chat_page.dart';
 import 'package:tutormatch/src/ui/screens/profilo_page.dart';
-import 'package:tutormatch/src/ui/screens/ricerca_tutor_page.dart';
+
+import 'calendario_tutor_page.dart';
 
 class MainPageTutor extends StatefulWidget {
   const MainPageTutor({super.key});
@@ -25,7 +26,7 @@ class _MainPageTutorState extends State<MainPageTutor> {
     // Le pagine da mostrare nell'IndexedStack, passa userId e ruolo a ciascuna schermata
     final List<Widget> _tutorPages = [
       ProfiloPage(userId: userId, ruolo: ruolo),      // Pagina Profilo
-      RicercaTutorPage(userId: userId, ruolo: ruolo), // Pagina Ricerca Tutor
+      CalendarioTutorPage(tutorId: userId),           // Pagina Calendario
       HomeTutor(userId: userId, ruolo: ruolo),        // Pagina Home Tutor
       ChatPage(userId: userId, ruolo: ruolo),         // Pagina Chat
       PrenotazioniPage(userId: userId, ruolo: ruolo), // Pagina Prenotazioni
@@ -33,9 +34,12 @@ class _MainPageTutorState extends State<MainPageTutor> {
 
     // Funzione per cambiare pagina
     void _onItemTapped(int index) {
-      setState(() {
-        _selectedIndex = index;
-      });
+      if (_selectedIndex != index) {
+        setState(() {
+          _selectedIndex = index;  // Cambia pagina solo se l'indice è diverso
+        });
+      }
+      // Se l'indice è lo stesso, non fare nulla
     }
 
     return Scaffold(
@@ -55,7 +59,7 @@ class _MainPageTutorState extends State<MainPageTutor> {
             label: 'Profilo',          // Testo 'Profilo'
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),  // Icona della ricerca
+            icon: Icon(Icons.calendar_month),  // Icona della ricerca
             label: 'Calendario',    // Testo 'Ricerca Tutor'
           ),
           BottomNavigationBarItem(

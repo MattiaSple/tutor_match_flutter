@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tutormatch/src/viewmodels/prenotazioni_view_model.dart';
+import 'package:tutormatch/src/viewmodels/calendario_view_model.dart';
 
 class PrenotazioniPage extends StatefulWidget {
   final String userId;
@@ -16,9 +17,10 @@ class _PrenotazioniPageState extends State<PrenotazioniPage> {
   @override
   void initState() {
     super.initState();
-    // Esegui la chiamata a caricaPrenotazioni una volta che la build iniziale è completata
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PrenotazioniViewModel>(context, listen: false).caricaPrenotazioni(widget.userId, widget.ruolo);
+      // Attiva il listener per le prenotazioni in tempo reale
+      Provider.of<PrenotazioniViewModel>(context, listen: false)
+          .listenToPrenotazioni(widget.userId, widget.ruolo);
     });
   }
 
@@ -28,59 +30,89 @@ class _PrenotazioniPageState extends State<PrenotazioniPage> {
       appBar: AppBar(
         title: const Text('Le tue prenotazioni'),
       ),
-      body: Consumer<PrenotazioniViewModel>(
-        builder: (context, prenotazioniViewModel, child) {
+      body: Consumer2<PrenotazioniViewModel, CalendarioViewModel>(
+        builder: (context, prenotazioniViewModel, calendarioViewModel, child) {
           if (prenotazioniViewModel.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
-          if (prenotazioniViewModel.prenotazioni.isEmpty) {
-            return const Center(
-              child: Text(
-                'Non ci sono prenotazioni disponibili.',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+          return prenotazioniViewModel.prenotazioni.isEmpty
+              ? ListView(
+            children: const [
+              Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20.0),
+                  child: Text(
+                    'Non ci sono prenotazioni disponibili.',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ),
               ),
-            );
-          }
-
-          return ListView.builder(
+            ],
+          )
+              : ListView.builder(
             itemCount: prenotazioniViewModel.prenotazioni.length,
             itemBuilder: (context, index) {
               final prenotazione = prenotazioniViewModel.prenotazioni[index];
 
-              return ListTile(
-                title: FutureBuilder<String>(
-                  future: prenotazioniViewModel.getMateriaFromAnnuncio(prenotazione.annuncioRef),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Text('Caricamento...');
-                    } else if (snapshot.hasError) {
-                      return const Text('Errore nel caricamento della materia');
-                    } else {
-                      return Text('Materia: ${snapshot.data}');
-                    }
-                  },
-                ),
-                subtitle: FutureBuilder<String>(
-                  future: prenotazioniViewModel.getNomeDaRef(widget.ruolo ? prenotazione.studenteRef : prenotazione.tutorRef),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Text('Caricamento...');
-                    } else if (snapshot.hasError) {
-                      return const Text('Errore nel caricamento del nome');
-                    } else {
-                      return Text('Nome: ${snapshot.data}');
-                    }
-                  },
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    prenotazioniViewModel.eliminaPrenotazione(prenotazione.fasciaCalendarioRef);
-                  },
-                ),
+              return FutureBuilder(
+                future: Future.wait([
+                  prenotazioniViewModel.getMateriaFromAnnuncio(prenotazione.annuncioRef.id),
+                  prenotazioniViewModel.getNomeDaRef(
+                      widget.ruolo ? prenotazione.studenteRef : prenotazione.tutorRef),
+                  calendarioViewModel.getOrarioFascia(prenotazione.fasciaCalendarioRef.id),
+                ]),
+                builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    print("Errore nel caricamento della prenotazione: ${snapshot.error}");
+                    return const ListTile(
+                      title: Text('Errore nel caricamento della prenotazione'),
+                    );
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const ListTile(
+                      title: Text('Dati prenotazione non disponibili'),
+                    );
+                  } else {
+                    final materia = snapshot.data![0] as String;
+                    final nome = snapshot.data![1] as String;
+                    final orari = snapshot.data![2] as Map<String, String>;
+                    final data = orari['data'] ?? 'N/A';
+                    final oraInizio = orari['oraInizio'] ?? 'N/A';
+                    final oraFine = orari['oraFine'] ?? 'N/A';
+
+                    return Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4D7881),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          'Materia: $materia',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${widget.ruolo ? "Studente" : "Tutor"}: $nome\nData: $data\nOrario: $oraInizio - $oraFine',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            // Elimina la prenotazione
+                            await prenotazioniViewModel
+                                .eliminaPrenotazione(prenotazione.fasciaCalendarioRef.id);
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                },
               );
             },
           );

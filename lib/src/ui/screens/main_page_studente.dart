@@ -33,9 +33,12 @@ class _MainPageStudenteState extends State<MainPageStudente> {
 
     // Funzione per cambiare pagina
     void _onItemTapped(int index) {
-      setState(() {
-        _selectedIndex = index;
-      });
+      if (_selectedIndex != index) {
+        setState(() {
+          _selectedIndex = index;  // Cambia pagina solo se l'indice è diverso
+        });
+      }
+      // Se l'indice è lo stesso, non fare nulla
     }
 
     return Scaffold(

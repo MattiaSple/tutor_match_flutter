@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Prenotazione {
   final String studenteRef;
   final String tutorRef;
-  final String fasciaCalendarioRef;
-  final String annuncioRef;
+  final DocumentReference fasciaCalendarioRef;
+  final DocumentReference annuncioRef;
 
   Prenotazione({
     required this.studenteRef,
@@ -16,8 +18,8 @@ class Prenotazione {
     return Prenotazione(
       studenteRef: data['studenteRef'] as String,
       tutorRef: data['tutorRef'] as String,
-      fasciaCalendarioRef: data['fasciaCalendarioRef'] as String,
-      annuncioRef: data['annuncioRef'] as String,
+      fasciaCalendarioRef: data['fasciaCalendarioRef'] as DocumentReference,
+      annuncioRef: data['annuncioRef'] as DocumentReference,
     );
   }
 }

@@ -5,37 +5,19 @@ import '../models/messaggio.dart';
 
 class InChatViewModel extends ChangeNotifier {
   final FirebaseUtileChat _firebaseUtileChat = FirebaseUtileChat();
-  List<Messaggio> _messages = [];
-  List<Messaggio> get messages => _messages;
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
-  bool _messagesLoaded = false; // Traccia se i messaggi sono caricati
-  bool get messagesLoaded => _messagesLoaded;
-
-  // Carica i messaggi per una chat specifica
-  Future<void> loadMessages(String chatId) async {
-    _isLoading = true;
-    _messagesLoaded = false; // Resetta lo stato dei messaggi caricati
-    notifyListeners();
-
-    try {
-      final snapshot = await _firebaseUtileChat.getMessages(chatId);
-      if (snapshot.value != null) {
-        Map<dynamic, dynamic> messagesData = snapshot.value as Map<dynamic, dynamic>;
-        _messages = messagesData.entries
+  // Stream per aggiornamenti in tempo reale della chat
+  Stream<List<Messaggio>> getMessagesStream(String chatId) {
+    return _firebaseUtileChat.getMessagesStream(chatId).map((event) {
+      if (event.snapshot.value != null) {
+        Map<dynamic, dynamic> messagesData = event.snapshot.value as Map<dynamic, dynamic>;
+        return messagesData.entries
             .map((entry) => Messaggio.fromMap(entry.value))
-            .toList();
-        _messages.sort((a, b) => a.timestamp.compareTo(b.timestamp)); // Ordina per data
+            .toList()
+          ..sort((a, b) => a.timestamp.compareTo(b.timestamp)); // Ordina per data
       }
-    } catch (e) {
-      print("Errore nel caricamento dei messaggi: $e");
-    } finally {
-      _isLoading = false;
-      _messagesLoaded = true; // Imposta i messaggi come caricati
-      notifyListeners();
-    }
+      return [];
+    });
   }
 
   // Invia un messaggio nella chat
@@ -43,10 +25,8 @@ class InChatViewModel extends ChangeNotifier {
     try {
       final email = await getEmail(userId);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final message = Messaggio(senderId: email, text: text, timestamp: timestamp);
 
       await _firebaseUtileChat.sendMessage(chatId, email, text, timestamp);
-      _messages.add(message);
       notifyListeners();
     } catch (e) {
       print("Errore durante l'invio del messaggio: $e");

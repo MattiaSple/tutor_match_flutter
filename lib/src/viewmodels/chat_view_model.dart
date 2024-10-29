@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import '../core/firebase_util_chat.dart';
+import '../core/firebase_util.dart';
 import '../models/chat.dart';
 
 class ChatViewModel extends ChangeNotifier {
   final FirebaseUtileChat _firebaseUtileChat = FirebaseUtileChat();
+  final FirebaseUtil _firebaseUtil = FirebaseUtil(); // Istanza per FirebaseUtil
   List<Chat> _chats = [];
   List<Chat> get chats => _chats;
 
@@ -22,12 +24,30 @@ class ChatViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Recupera tutte le chat per l'utente
-  Future<void> loadAllChats(String email, String fullName) async {
+  // Funzione per caricare tutte le chat con le informazioni dell'utente
+  Future<void> loadChatsWithUserInfo(String userId) async {
     _isLoading = true;
-    _loggedUserName = fullName; // Salva il nome completo dell'utente loggato
     notifyListeners();
 
+    try {
+      // Recupera l'email e il nome completo dell'utente
+      String email = await _firebaseUtil.getEmailByUserId(userId);
+      String fullName = await _firebaseUtil.getNomeDaRef(userId);
+      _loggedUserName = fullName;
+
+      // Carica le chat usando l'email
+      await _loadAllChats(email);
+      _hasLoadedChats = true; // Imposta il flag dopo il caricamento iniziale
+    } catch (e) {
+      print("Errore nel caricamento delle informazioni dell'utente: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Recupera tutte le chat per l'utente
+  Future<void> _loadAllChats(String email) async {
     try {
       DataSnapshot snapshot = await _firebaseUtileChat.getAllChats();
 
@@ -47,12 +67,7 @@ class ChatViewModel extends ChangeNotifier {
       } else {
         print("ChatViewModel: Nessuna chat trovata");
       }
-
-      _isLoading = false;
-      notifyListeners();
     } catch (e) {
-      _isLoading = false;
-      notifyListeners();
       print("ChatViewModel: Errore nel caricamento delle chat: $e");
     }
   }

@@ -8,10 +8,14 @@ import 'package:tutormatch/src/core/firebase_util.dart';
 class CalendarioViewModel extends ChangeNotifier {
   final FirebaseUtil _firebaseUtil = FirebaseUtil();
   List<Calendario> fasceOrarie = [];
+  String? nomeECognomeStudente;
+  String? nomeECognomeTutor;
+  String? materia;
+  String? emailStudente;
+  String? emailTutor;
   String? message;
   StreamSubscription? _fasceOrarieSubscription; // Subscription per ascoltare i cambiamenti in tempo reale
   ValueNotifier<String?> errorNotifier = ValueNotifier(null); // Notificatore per i messaggi di errore
-
 
   void listenToFasceOrarie(String tutorId, bool ruolo) {
     // Se esiste un listener attivo, cancellalo prima di crearne uno nuovo

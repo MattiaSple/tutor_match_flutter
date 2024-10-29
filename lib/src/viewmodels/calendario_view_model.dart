@@ -46,7 +46,7 @@ class CalendarioViewModel extends ChangeNotifier {
   }
 
   // funzione per ottenere data, oraInizio e oraFine per una fascia specifica
-  Future<Map<String, String>> getOrarioFascia(String fasciaCalendarioRef) async {
+  Future<Map<String, String>> getOrarioFascia(DocumentReference fasciaCalendarioRef) async {
     try {
       Calendario fascia = await _firebaseUtil.getFasciaOraria(fasciaCalendarioRef);
       return {

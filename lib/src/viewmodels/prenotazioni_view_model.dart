@@ -75,10 +75,10 @@ class PrenotazioniViewModel extends ChangeNotifier {
 
 
   // Metodo per eliminare una prenotazione e aggiornare lo stato in Calendario
-  Future<void> eliminaPrenotazione(String fasciaCalendarioRef) async {
+  Future<void> eliminaPrenotazione(DocumentReference fasciaCalendarioRef, String tutorId) async {
     try {
       // Chiama Firestore per eliminare la prenotazione
-      await _firebaseUtil.eliminaPrenotazioneByFascia(fasciaCalendarioRef);
+      await _firebaseUtil.eliminaPrenotazioneByFascia(fasciaCalendarioRef, tutorId);
     } catch (e) {
       print("Errore durante l'eliminazione della prenotazione: $e");
     }

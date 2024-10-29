@@ -111,7 +111,6 @@ class _OrariDisponibiliPageState extends State<OrariDisponibiliPage> {
               },
               child: const Text('Prenota'),
             ),
-
           ],
         ),
       ),

@@ -60,7 +60,7 @@ class _PrenotazioniPageState extends State<PrenotazioniPage> {
                   prenotazioniViewModel.getMateriaFromAnnuncio(prenotazione.annuncioRef.id),
                   prenotazioniViewModel.getNomeDaRef(
                       widget.ruolo ? prenotazione.studenteRef : prenotazione.tutorRef),
-                  calendarioViewModel.getOrarioFascia(prenotazione.fasciaCalendarioRef.id),
+                  calendarioViewModel.getOrarioFascia(prenotazione.fasciaCalendarioRef),
                 ]),
                 builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -106,7 +106,7 @@ class _PrenotazioniPageState extends State<PrenotazioniPage> {
                           onPressed: () async {
                             // Elimina la prenotazione
                             await prenotazioniViewModel
-                                .eliminaPrenotazione(prenotazione.fasciaCalendarioRef.id);
+                                .eliminaPrenotazione(prenotazione.fasciaCalendarioRef, prenotazione.tutorRef);
                           },
                         ),
                       ),

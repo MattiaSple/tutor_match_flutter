@@ -123,29 +123,38 @@ class FirebaseUtil {
     }
   }
 
-// Elimina una prenotazione tramite fasciaCalendarioRef
-  Future<void> eliminaPrenotazioneByFascia(String fasciaCalendarioRef) async {
+  // Elimina una prenotazione tramite fasciaCalendarioRef in modo atomico
+  Future<void> eliminaPrenotazioneByFascia(DocumentReference fasciaCalendarioRef, String tutorId) async {
     try {
-      // Crea il riferimento del documento fasciaCalendarioRef
-      DocumentReference calendarioRef = _firestore.doc('calendario/$fasciaCalendarioRef');
+      await _firestore.runTransaction((transaction) async {
+        // Cerca la prenotazione che ha quella fasciaCalendarioRef
+        QuerySnapshot snapshot = await _firestore
+            .collection('prenotazioni')
+            .where('fasciaCalendarioRef', isEqualTo: fasciaCalendarioRef)
+            .where('tutorRef', isEqualTo: tutorId)
+            .get();
 
-      // Cerca la prenotazione che ha quella fasciaCalendarioRef
-      QuerySnapshot snapshot = await _firestore
-          .collection('prenotazioni')
-          .where('fasciaCalendarioRef', isEqualTo: calendarioRef) // Confronta il DocumentReference
-          .get();
+        if (snapshot.docs.isNotEmpty) {
+          // Ottieni il riferimento del documento della prenotazione
+          DocumentReference prenotazioneRef = snapshot.docs.first.reference;
 
-      if (snapshot.docs.isNotEmpty) {
-        // Elimina solo la prima prenotazione trovata con quella fasciaCalendarioRef
-        await snapshot.docs.first.reference.delete();
-      } else {
-        print("Nessuna prenotazione trovata con annuncioRef: $fasciaCalendarioRef");
-      }
+          // Elimina la prenotazione all'interno della transazione
+          transaction.delete(prenotazioneRef);
+
+          // Aggiorna lo stato della fascia oraria nella collezione calendario all'interno della transazione
+          transaction.update(fasciaCalendarioRef, {'statoPren': false});
+        } else {
+          print("Nessuna prenotazione trovata con fasciaCalendarioRef: $fasciaCalendarioRef");
+        }
+      });
     } catch (e) {
-      print("Errore durante l'eliminazione della prenotazione con annuncioRef: $e");
+      print("Errore durante l'eliminazione della prenotazione e aggiornamento di statoPren: $e");
       throw e;
     }
   }
+
+
+
   // Recupera i dati dell'utente dal database
   Future<DocumentSnapshot> getUserById(String userId) async {
     try {
@@ -390,22 +399,22 @@ class FirebaseUtil {
         batch.update(fasciaRef, {'statoPren': true});
       }
     }
-
     // Esegui il batch
     await batch.commit();
   }
 
 
   // Funzione per recuperare una fascia oraria specifica dal suo riferimento
-  Future<Calendario> getFasciaOraria(String fasciaCalendarioRef) async {
+  Future<Calendario> getFasciaOraria(DocumentReference fasciaCalendarioRef) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('calendario').doc(fasciaCalendarioRef).get();
+      DocumentSnapshot doc = await fasciaCalendarioRef.get();
       return Calendario.fromFirestore(doc.data() as Map<String, dynamic>);
     } catch (e) {
       print("Errore nel recupero della fascia oraria: $e");
       throw e;
     }
   }
+
 
   Stream<QuerySnapshot> getFasceOrarieStreamByTutorId(String tutorId, bool ruolo) {
 

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:tutormatch/src/viewmodels/calendario_view_model.dart';
 import 'package:tutormatch/src/viewmodels/prenotazioni_view_model.dart';
 
+import '../../viewmodels/chat_view_model.dart';
+
 class OrariDisponibiliPage extends StatefulWidget {
   final String tutorId;
   final String userId; // ID dello studente che prenota
@@ -34,6 +36,7 @@ class _OrariDisponibiliPageState extends State<OrariDisponibiliPage> {
   Widget build(BuildContext context) {
     final calendarioViewModel = Provider.of<CalendarioViewModel>(context);
     final prenotazioniViewModel = Provider.of<PrenotazioniViewModel>(context);
+    final chatViewModel = Provider.of<ChatViewModel>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -93,7 +96,8 @@ class _OrariDisponibiliPageState extends State<OrariDisponibiliPage> {
                     .creaPrenotazioni(widget.userId, widget.tutorId, widget.annuncioId, fasceSelezionate)
                     .then((_) {
                   setState(() {
-                    // Dopo la prenotazione, aggiorna fasceSelezionate per rimuovere quelle già prenotate
+                    // Dopo la prenotazione, aggiorna fasceSelezionate per rimuovere quelle già prenotate  e crea la chat
+                    chatViewModel.creaChat(widget.userId, widget.tutorId, widget.annuncioId);
                     fasceSelezionate = fasceSelezionate.where((fasciaId) {
                       return calendarioViewModel.fasceOrarie.any((fascia) {
                         final idFascia = '${fascia.data.toIso8601String()}_${fascia.oraInizio}';

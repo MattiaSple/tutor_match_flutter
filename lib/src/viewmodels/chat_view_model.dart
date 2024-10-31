@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/firebase_util_chat.dart';
 import '../core/firebase_util.dart';
 import '../models/chat.dart';
+import '../models/utente.dart';
 
 class ChatViewModel extends ChangeNotifier {
   final FirebaseUtileChat _firebaseUtileChat = FirebaseUtileChat();
@@ -70,5 +71,58 @@ class ChatViewModel extends ChangeNotifier {
     } catch (e) {
       print("ChatViewModel: Errore nel caricamento delle chat: $e");
     }
+  }
+
+  Future<void> creaChat(String studenteId, String tutorId, String annuncioId) async {
+    try {
+      // Genera un ID univoco per la chat in base agli ID degli utenti
+      final chatId = createChatId(studenteId, tutorId);
+
+      // Recupera l'annuncio per ottenere la materia
+      final annuncioSnapshot = await _firebaseUtil.getAnnuncioById(annuncioId);
+      final Map<String, dynamic> annuncioData = annuncioSnapshot.data() as Map<String, dynamic>;
+      final materia = annuncioData['materia'] ?? 'Materia non specificata';
+
+      // Recupera i dati dello studente
+      final studenteSnapshot = await _firebaseUtil.getUserById(studenteId);
+      final Map<String, dynamic> studenteData = studenteSnapshot.data() as Map<String, dynamic>;
+      final Utente studente = Utente.fromMap(studenteData, studenteId);
+
+      // Recupera i dati del tutor
+      final tutorSnapshot = await _firebaseUtil.getUserById(tutorId);
+      final Map<String, dynamic> tutorData = tutorSnapshot.data() as Map<String, dynamic>;
+      final Utente tutor = Utente.fromMap(tutorData, tutorId);
+
+      // Struttura della chat da salvare
+      final chatData = {
+        "id": chatId,
+        "lastMessage": {
+          "senderId": "", // Campo da aggiornare quando viene inviato un nuovo messaggio
+          "text": "",
+          "timestamp": DateTime.now().millisecondsSinceEpoch,
+          "unreadBy": []
+        },
+        "messages": {},
+        "participants": [
+          studente.email,
+          tutor.email
+        ],
+        "participantsNames": [
+          "${studente.nome} ${studente.cognome}",
+          "${tutor.nome} ${tutor.cognome}"
+        ],
+        "subject": materia
+      };
+
+      // Salva la chat nel database
+      await _firebaseUtileChat.createChat(chatId, chatData);
+    } catch (e) {
+      print('Errore nella creazione della chat: $e');
+      throw e;
+    }
+  }
+// Funzione per generare un ID univoco per la chat, combinando gli ID dei due utenti
+  String createChatId(String studenteId, String tutorId) {
+    return studenteId.compareTo(tutorId) < 0 ? "$studenteId-$tutorId" : "$tutorId-$studenteId";
   }
 }

@@ -13,10 +13,9 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final chatViewModel = Provider.of<ChatViewModel>(context);
 
-    // Carica le chat solo se non sono già state caricate
-    if (!chatViewModel.hasLoadedChats && !chatViewModel.isLoading) {
+    if (!chatViewModel.hasLoadedChats) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        chatViewModel.loadChatsWithUserInfo(userId); // Inizia il caricamento delle chat
+        chatViewModel.listenToChats(userId); // Inizia ad ascoltare le chat in tempo reale
       });
     }
 
@@ -30,7 +29,7 @@ class ChatPage extends StatelessWidget {
         itemCount: chatViewModel.chats.length,
         itemBuilder: (context, index) {
           final chat = chatViewModel.chats[index];
-          // Trova il nome dell'altro partecipante
+          // Find the name of the other participant
           String otherParticipantName = chat.participantsNames
               .firstWhere((name) => name != chatViewModel.loggedUserName, orElse: () => 'Sconosciuto');
 
@@ -39,7 +38,7 @@ class ChatPage extends StatelessWidget {
             subtitle: Text(chat.lastMessage),
             trailing: Text(chat.subject),
             onTap: () {
-              // Naviga verso la pagina di chat con i messaggi
+              // Navigate to the chat details page
               Navigator.push(
                 context,
                 MaterialPageRoute(

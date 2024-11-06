@@ -108,7 +108,6 @@ class CalendarioViewModel extends ChangeNotifier {
       bool success = await _firebaseUtil.aggiungiFasciaOraria(nuovaFascia);
       print("GGGGGGGGGGGGGGGGGGGGGGGGGGGG");
       if (success) {
-        fasceOrarie.add(nuovaFascia); // Aggiunge la fascia alla lista locale
         ordinaFasceOrarie(); // Ordina la lista dopo l'aggiunta
       } else {
         errorNotifier.value = 'Errore nell\'aggiunta della fascia';
@@ -122,13 +121,7 @@ class CalendarioViewModel extends ChangeNotifier {
   // Funzione per eliminare una fascia oraria
   Future<void> eliminaFasciaOraria(String tutorId, DateTime data, String oraInizio) async {
     bool success = await _firebaseUtil.eliminaFasciaOraria(tutorId, data, oraInizio);
-    if (success) {
-      fasceOrarie.removeWhere((fascia) =>
-      fascia.tutorRef.id == tutorId &&
-          fascia.data == data &&
-          fascia.oraInizio == oraInizio);
-      //notifyListeners();
-    } else {
+    if (!success) {
       errorNotifier.value = 'Errore nell\'eliminazione della fascia oraria';
     }
   }

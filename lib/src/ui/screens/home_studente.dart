@@ -7,7 +7,6 @@ class HomeStudente extends StatefulWidget {
   final bool ruolo;
 
   const HomeStudente({required this.userId, required this.ruolo, super.key});
-
   @override
   _HomeStudenteState createState() => _HomeStudenteState();
 }

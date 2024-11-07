@@ -13,6 +13,8 @@ class ProfiloPage extends StatefulWidget {
 }
 
 class _ProfiloPageState extends State<ProfiloPage> {
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +48,7 @@ class _ProfiloPageState extends State<ProfiloPage> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
-                key: GlobalKey<FormState>(),
+                key: _formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -90,12 +92,14 @@ class _ProfiloPageState extends State<ProfiloPage> {
                     const SizedBox(height: 40),
                     ElevatedButton(
                       onPressed: () {
-                        if (GlobalKey<FormState>().currentState!.validate()) {
-                          GlobalKey<FormState>().currentState!.save();
-                          profiloViewModel.aggiornaProfilo(profiloViewModel.nome!, profiloViewModel.cognome!);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Profilo aggiornato con successo')),
-                          );
+                        if (_formKey.currentState!.validate()) {
+                          _formKey.currentState!.save();
+                          if (profiloViewModel.nome != null && profiloViewModel.cognome != null) {
+                            profiloViewModel.aggiornaProfilo(profiloViewModel.nome!, profiloViewModel.cognome!);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Profilo aggiornato con successo')),
+                            );
+                          }
                         }
                       },
                       child: const Text('Salva modifiche'),

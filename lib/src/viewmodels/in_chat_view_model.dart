@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import '../core/firebase_util_chat.dart';
 import '../core/firebase_util.dart';
@@ -24,9 +25,9 @@ class InChatViewModel extends ChangeNotifier {
   Future<void> sendMessage(String chatId, String userId, String text) async {
     try {
       final email = await getEmail(userId);
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final timestamp = ServerValue.timestamp;
 
-      await _firebaseUtileChat.sendMessage(chatId, email, text, timestamp);
+      await _firebaseUtileChat.sendMessage(chatId, email, text, timestamp as int);
       notifyListeners();
     } catch (e) {
       print("Errore durante l'invio del messaggio: $e");

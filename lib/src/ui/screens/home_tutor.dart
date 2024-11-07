@@ -14,7 +14,32 @@ class HomeTutor extends StatefulWidget {
 
 class _HomeTutorState extends State<HomeTutor> {
   String? selectedMateria;
-  List<String> materie = ['Matematica', 'Fisica', 'Informatica'];
+  List<String> materie = [
+    'Antropologia', 'Architettura', 'Arte',
+    'Astronomia', 'Biologia', 'Biotecnologie',
+    'Chimica', 'Chimica farmaceutica', 'Cinema e audiovisivo',
+    'Contabilità', 'Design', 'Diritto',
+    'Diritto commerciale', 'Diritto internazionale', 'Economia',
+    'Economia aziendale', 'Elettronica', 'Elettrotecnica',
+    'Filosofia', 'Fisica', 'Fisica nucleare',
+    'Fisioterapia', 'Fotografia', 'Francese',
+    'Geografia', 'Geologia', 'Giurisprudenza',
+    'Informatica', 'Ingegneria civile', 'Ingegneria elettronica',
+    'Ingegneria meccanica', 'Inglese', 'Italiano',
+    'Latino', 'Letteratura italiana', 'Logistica',
+    'Marketing', 'Matematica', 'Medicina',
+    'Meccanica', 'Musica', 'Odontoiatria',
+    'Pedagogia', 'Psicologia', 'Psicologia clinica',
+    'Relazioni internazionali', 'Restauro', 'Robotica',
+    'Russo', 'Scenografia', 'Scienze ambientali',
+    'Scienze della comunicazione', 'Scienze della terra', 'Scienze dell\'educazione',
+    'Scienze infermieristiche', 'Scienze motorie', 'Sociologia',
+    'Spagnolo', 'Statistica', 'Storia',
+    'Storia contemporanea', 'Storia dell\'arte', 'Storia moderna',
+    'Teatro', 'Tedesco', 'Veterinaria',
+  ];
+
+
 
   @override
   void didChangeDependencies() {

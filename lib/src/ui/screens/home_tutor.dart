@@ -28,10 +28,21 @@ class _HomeTutorState extends State<HomeTutor> {
   // Funzione per creare l'annuncio
   void _creaAnnuncio(AnnuncioViewModel annuncioViewModel) {
     if (selectedMateria != null) {
-      annuncioViewModel.creaAnnuncio(widget.userId, selectedMateria!);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Annuncio creato con successo per materia: $selectedMateria')),
-      );
+      // Controlla se la materia selezionata è già presente negli annunci
+      bool materiaEsistente = annuncioViewModel.annunci.any((annuncio) => annuncio['materia'] == selectedMateria);
+
+      if (materiaEsistente) {
+        // Mostra un messaggio di errore se l'annuncio per la materia esiste già
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Annuncio già esistente per la materia: $selectedMateria')),
+        );
+      } else {
+        // Crea l'annuncio se non esiste ancora
+        annuncioViewModel.creaAnnuncio(widget.userId, selectedMateria!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Annuncio creato con successo per materia: $selectedMateria')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Seleziona una materia')),

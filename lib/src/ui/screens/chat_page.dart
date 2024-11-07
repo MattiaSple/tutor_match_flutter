@@ -3,21 +3,29 @@ import 'package:provider/provider.dart';
 import 'package:tutormatch/src/viewmodels/chat_view_model.dart';
 import 'in_chat_page.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   final String userId;
   final bool ruolo;
 
   const ChatPage({required this.userId, required this.ruolo, super.key});
 
   @override
+  _ChatPageState createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Chiama listenToChats una sola volta, quando la pagina è creata
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ChatViewModel>(context, listen: false).listenToChats(widget.userId);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final chatViewModel = Provider.of<ChatViewModel>(context);
-
-    if (!chatViewModel.hasLoadedChats) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        chatViewModel.listenToChats(userId); // Inizia ad ascoltare le chat in tempo reale
-      });
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -42,7 +50,6 @@ class ChatPage extends StatelessWidget {
                 IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: () async {
-                    // Chiede conferma prima di eliminare
                     final confirm = await showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -72,7 +79,7 @@ class ChatPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => InChatPage(chatId: chat.id, userId: userId),
+                  builder: (context) => InChatPage(chatId: chat.id, userId: widget.userId),
                 ),
               );
             },

@@ -31,6 +31,12 @@ class ChatViewModel extends ChangeNotifier {
   }
   // Define listenToChats to set up real-time chat loading
   void listenToChats(String userId) {
+    // Verifica se il listener è già attivo per evitare duplicati
+    if (_chatSubscription != null) {
+      print("Listener già attivo, nessuna nuova istanza creata.");
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
 
@@ -40,7 +46,7 @@ class ChatViewModel extends ChangeNotifier {
         if (fullName != null) {
           _loggedUserName = fullName;
 
-          // Set up real-time listener for chats involving the user
+          // Setta il listener in tempo reale per le chat
           _chatSubscription = _firebaseUtileChat.getAllChatsStream().listen((event) {
             if (event.snapshot.value != null) {
               _chats = event.snapshot.children
@@ -52,8 +58,7 @@ class ChatViewModel extends ChangeNotifier {
                 final chatId = child.key ?? '';
                 final chatData = child.value as Map<dynamic, dynamic>;
                 return Chat.fromMap(chatId, chatData);
-              })
-                  .toList();
+              }).toList();
 
               print("ChatViewModel: ${_chats.length} chat trovate per $email");
             } else {
@@ -81,6 +86,8 @@ class ChatViewModel extends ChangeNotifier {
       notifyListeners();
     });
   }
+
+
 
   // Dispose the subscription to avoid memory leaks
   @override

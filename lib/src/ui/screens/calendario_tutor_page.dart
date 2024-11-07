@@ -38,27 +38,64 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
     }
   }
 
+
   Future<void> _selezionaOraInizio(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
+    final now = DateTime.now();
+
+    // Determina l'ora corrente se la data selezionata è oggi
+    final isToday = _dataSelezionata?.day == now.day &&
+        _dataSelezionata?.month == now.month &&
+        _dataSelezionata?.year == now.year;
+
+    // Crea una lista di ore da 0 a 23, filtrando se la data è oggi
+    final availableHours = List<int>.generate(24, (index) => index)
+        .where((hour) => !isToday || hour > now.hour)
+        .toList();
+
+    // Mostra il selettore di ore con solo le ore disponibili
+    final pickedHour = await showModalBottomSheet<int>(
       context: context,
-      initialTime: const TimeOfDay(hour: 12, minute: 0),
-      builder: (BuildContext context, Widget? child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-          child: child!,
+      builder: (BuildContext context) {
+        return Container(
+          height: 250,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Seleziona Ora',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: availableHours.length,
+                  itemBuilder: (context, index) {
+                    final hour = availableHours[index];
+                    return ListTile(
+                      title: Text('${hour.toString().padLeft(2, '0')}:00'),
+                      onTap: () {
+                        Navigator.of(context).pop(hour);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
-    if (picked != null && picked.minute == 0) {
+
+    if (pickedHour != null) {
       setState(() {
-        _oraInizioSelezionata = picked;
-      });
-    } else {
-      setState(() {
-        erroreFascia = "Seleziona solo ore esatte (es. 14:00)";
+        _oraInizioSelezionata = TimeOfDay(hour: pickedHour, minute: 0);
+        erroreFascia = null;
       });
     }
   }
+
+
 
   String formatTimeOfDay(TimeOfDay time) {
     final hours = time.hour.toString().padLeft(2, '0');

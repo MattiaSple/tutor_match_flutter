@@ -29,16 +29,46 @@ class ChatPage extends StatelessWidget {
         itemCount: chatViewModel.chats.length,
         itemBuilder: (context, index) {
           final chat = chatViewModel.chats[index];
-          // Find the name of the other participant
           String otherParticipantName = chat.participantsNames
               .firstWhere((name) => name != chatViewModel.loggedUserName, orElse: () => 'Sconosciuto');
 
           return ListTile(
             title: Text(otherParticipantName),
             subtitle: Text(chat.lastMessage),
-            trailing: Text(chat.subject),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(chat.subject),
+                IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () async {
+                    // Chiede conferma prima di eliminare
+                    final confirm = await showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Conferma eliminazione'),
+                        content: Text('Sei sicuro di voler eliminare questa chat?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text('Annulla'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text('Elimina'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      chatViewModel.eliminaChat(chat.id);
+                    }
+                  },
+                ),
+              ],
+            ),
             onTap: () {
-              // Navigate to the chat details page
               Navigator.push(
                 context,
                 MaterialPageRoute(

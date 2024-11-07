@@ -70,4 +70,12 @@ class FirebaseUtileChat {
   Stream<DatabaseEvent> getAllChatsStream() {
     return _chatRef.onValue; // Restituisce un flusso degli eventi di cambiamento
   }
+  Future<void> deleteChat(String chatId) async {
+    try {
+      await _chatRef.child(chatId).remove();
+      print("Chat eliminata con successo: $chatId");
+    } catch (e) {
+      throw Exception("Errore durante l'eliminazione della chat: $e");
+    }
+  }
 }

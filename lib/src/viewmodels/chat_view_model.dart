@@ -144,4 +144,13 @@ class ChatViewModel extends ChangeNotifier {
       throw e;
     }
   }
+  Future<void> eliminaChat(String chatId) async {
+    try {
+      await _firebaseUtileChat.deleteChat(chatId);
+      _chats.removeWhere((chat) => chat.id == chatId);
+      notifyListeners();
+    } catch (e) {
+      print("Errore durante l'eliminazione della chat: $e");
+    }
+  }
 }

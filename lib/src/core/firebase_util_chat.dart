@@ -17,19 +17,19 @@ class FirebaseUtileChat {
     return _chatRef.child(chatId).child('messages').onValue;
   }
 
-  Future<void> sendMessage(String chatId, String senderId, String text, int timestamp) async {
+  Future<void> sendMessage(String chatId, String senderId, String text) async {
     try {
       DatabaseReference newMessageRef = _chatRef.child(chatId).child('messages').push();
       await newMessageRef.set({
         'senderId': senderId,
         'text': text,
-        'timestamp': timestamp,
+        'timestamp': ServerValue.timestamp, // Usa il timestamp del server qui
       });
 
       await _chatRef.child(chatId).child('lastMessage').set({
         'senderId': senderId,
         'text': text,
-        'timestamp': timestamp,
+        'timestamp': ServerValue.timestamp, // Anche qui usa il timestamp del server
       });
     } catch (e) {
       throw Exception("Errore nell'invio del messaggio: $e");

@@ -17,6 +17,7 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
   final ScrollController _scrollController = ScrollController();
   final TextEditingController messageController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  String? userEmail;
 
   @override
   bool get wantKeepAlive => true;
@@ -25,6 +26,13 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _loadUserEmail(); // Carica l'email all'inizio
+  }
+
+  Future<void> _loadUserEmail() async {
+    final inChatViewModel = Provider.of<InChatViewModel>(context, listen: false);
+    userEmail = await inChatViewModel.getEmail(widget.userId);
+    setState(() {}); // Aggiorna lo stato una volta caricata l'email
   }
 
   @override
@@ -76,7 +84,7 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    bool isMine = message.senderId == widget.userId;
+                    bool isMine = message.senderId == userEmail; // Confronto con l'email caricata
 
                     return FutureBuilder<String>(
                       future: inChatViewModel.getSenderNameByEmail(message.senderId),

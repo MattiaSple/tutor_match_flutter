@@ -6,6 +6,7 @@ import '../core/firebase_util.dart';
 import '../models/chat.dart';
 import '../models/utente.dart';
 import 'dart:math';
+import 'package:firebase_database/firebase_database.dart';
 
 class ChatViewModel extends ChangeNotifier {
   final FirebaseUtileChat _firebaseUtileChat = FirebaseUtileChat();
@@ -116,13 +117,12 @@ class ChatViewModel extends ChangeNotifier {
         return; // Esce dalla funzione se la chat esiste già
       }
 
-      // Struttura della chat da salvare
       final chatData = {
         "id": chatId,
         "lastMessage": {
           "senderId": "", // Campo da aggiornare quando viene inviato un nuovo messaggio
           "text": "",
-          "timestamp": DateTime.now().millisecondsSinceEpoch,
+          "timestamp": ServerValue.timestamp, // Imposta il timestamp server-side
           "unreadBy": []
         },
         "messages": {},

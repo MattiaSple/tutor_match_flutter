@@ -432,4 +432,24 @@ class FirebaseUtil {
       return query.snapshots(); // Restituisce uno stream in tempo reale
     }
   }
+  // Recupera il nome e cognome in base all'email dell'utente
+  Future<String> getNomeDaEmail(String email) async {
+    try {
+      QuerySnapshot userSnapshot = await _firestore
+          .collection('utenti')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (userSnapshot.docs.isNotEmpty) {
+        DocumentSnapshot userDoc = userSnapshot.docs.first;
+        return "${userDoc.get('nome')} ${userDoc.get('cognome')}";
+      } else {
+        throw Exception('Utente non trovato');
+      }
+    } catch (e) {
+      print("Errore nel recupero del nome da email: $e");
+      throw e;
+    }
+  }
 }

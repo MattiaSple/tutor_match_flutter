@@ -41,4 +41,13 @@ class InChatViewModel extends ChangeNotifier {
       return '';
     }
   }
+  // Funzione per ottenere nome e cognome in base all'email dell'utente
+  Future<String> getSenderNameByEmail(String email) async {
+    try {
+      return await FirebaseUtil().getNomeDaEmail(email);
+    } catch (e) {
+      print('Errore nel recupero del nome e cognome da email: $e');
+      throw e;
+    }
+  }
 }

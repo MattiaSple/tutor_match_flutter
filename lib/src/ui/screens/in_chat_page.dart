@@ -36,14 +36,6 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
     super.dispose();
   }
 
-  @override
-  void didChangeMetrics() {
-    super.didChangeMetrics();
-    if (MediaQuery.of(context).viewInsets.bottom > 0) {
-      _scrollToBottom();
-    }
-  }
-
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -58,7 +50,7 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // per garantire che AutomaticKeepAliveClientMixin funzioni
+    super.build(context);
     final inChatViewModel = Provider.of<InChatViewModel>(context, listen: false);
 
     return Scaffold(
@@ -84,13 +76,12 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
+                    bool isMine = message.senderId == widget.userId;
 
                     return FutureBuilder<String>(
-                      future: inChatViewModel.getEmail(widget.userId),
+                      future: inChatViewModel.getSenderNameByEmail(message.senderId),
                       builder: (context, snapshot) {
-                        final senderEmail = snapshot.data ?? '';
-                        bool isMine = message.senderId == senderEmail;
-
+                        final senderName = snapshot.data ?? '';
                         return Align(
                           alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
                           child: Container(
@@ -109,7 +100,7 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
                               crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  senderEmail,
+                                  senderName,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: isMine ? Colors.white70 : Colors.black87,

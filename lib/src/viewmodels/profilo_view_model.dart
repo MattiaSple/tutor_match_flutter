@@ -1,6 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:tutormatch/src/core/firebase_util.dart';
+
+import 'chat_view_model.dart';
 
 class ProfiloViewModel extends ChangeNotifier {
   final FirebaseUtil _firebaseUtil = FirebaseUtil();
@@ -62,4 +66,30 @@ class ProfiloViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // Funzione di logout e reindirizzamento
+  Future<void> logoutEReindirizza(BuildContext context) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      // Cancella listener di chat e altri ViewModel
+      Provider.of<ChatViewModel>(context, listen: false).dispose();
+
+      // Effettua il logout da Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // Naviga alla pagina di login e rimuove tutte le pagine precedenti
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/login',
+            (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      errore = 'Errore durante il logout: $e';
+    } finally {
+      isLoading = false;
+      notifyListeners(); // Aggiorna la UI
+    }
+  }
+
 }

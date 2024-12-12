@@ -90,6 +90,8 @@ class _HomeTutorState extends State<HomeTutor> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Tutor'),
+        centerTitle: true, // Centra il titolo
+        automaticallyImplyLeading: false, // Rimuove la freccia indietro
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

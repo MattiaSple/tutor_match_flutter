@@ -151,6 +151,8 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calendario Tutor'),
+        centerTitle: true, // Centra il titolo
+        automaticallyImplyLeading: false, // Rimuove la freccia indietro
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

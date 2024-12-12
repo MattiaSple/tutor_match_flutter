@@ -29,6 +29,8 @@ class _PrenotazioniPageState extends State<PrenotazioniPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Le tue prenotazioni'),
+        centerTitle: true, // Centra il titolo
+        automaticallyImplyLeading: false, // Rimuove la freccia indietro
       ),
       body: Consumer2<PrenotazioniViewModel, CalendarioViewModel>(
         builder: (context, prenotazioniViewModel, calendarioViewModel, child) {

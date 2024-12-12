@@ -30,6 +30,8 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Le tue chat'),
+        centerTitle: true, // Centra il titolo
+        automaticallyImplyLeading: false, // Rimuove la freccia indietro
       ),
       body: chatViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())

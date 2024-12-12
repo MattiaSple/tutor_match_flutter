@@ -29,7 +29,18 @@ class _ProfiloPageState extends State<ProfiloPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Modifica Profilo'),
+        centerTitle: true, // Centra il titolo
+        automaticallyImplyLeading: false, // Rimuove la freccia indietro
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Provider.of<ProfiloViewModel>(context, listen: false).logoutEReindirizza(context);
+            },
+          ),
+        ],
       ),
+
       body: Consumer<ProfiloViewModel>(
         builder: (context, profiloViewModel, child) {
           if (profiloViewModel.isLoading) {

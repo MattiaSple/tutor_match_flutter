@@ -14,6 +14,7 @@ class AuthViewModel extends ChangeNotifier {
   // Login con email e password
   Future<void> signInWithEmailAndPassword(String email, String password) async {
     try {
+      //await _firebaseUtil.verificaFirebaseInizializzato();
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       notifyListeners();
     } catch (e) {

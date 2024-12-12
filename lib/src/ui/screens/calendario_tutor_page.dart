@@ -40,17 +40,41 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
 
 
   Future<void> _selezionaOraInizio(BuildContext context) async {
+
+    if (_dataSelezionata == null) {
+      // Mostra uno SnackBar se la data non è stata selezionata
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Seleziona prima la data"),
+          backgroundColor: Colors.black,
+        ),
+      );
+      return; // Esci dalla funzione
+    }
+
     final now = DateTime.now();
+    final calendarioViewModel = Provider.of<CalendarioViewModel>(context, listen: false);
 
     // Determina l'ora corrente se la data selezionata è oggi
     final isToday = _dataSelezionata?.day == now.day &&
         _dataSelezionata?.month == now.month &&
         _dataSelezionata?.year == now.year;
 
-    // Crea una lista di ore da 0 a 23, filtrando se la data è oggi
-    final availableHours = List<int>.generate(24, (index) => index)
-        .where((hour) => !isToday || hour > now.hour)
-        .toList();
+    final fasceEsistenti = calendarioViewModel.fasceOrarie.where((fascia) {
+      return calendarioViewModel.compareDateOnly(fascia.data, _dataSelezionata!) == 0;
+    }).toList();
+
+    final availableHours = List<int>.generate(24, (index) => index).where((hour) {
+      if (isToday && hour <= now.hour) {
+        return false; // Filtra ore passate
+      }
+      // Filtra le ore già presenti
+      return !fasceEsistenti.any((fascia) {
+        final inizio = int.parse(fascia.oraInizio.split(':')[0]);
+        return hour == inizio;
+      });
+    }).toList();
+
 
     // Mostra il selettore di ore con solo le ore disponibili
     final pickedHour = await showModalBottomSheet<int>(
@@ -112,6 +136,11 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
 
       Provider.of<CalendarioViewModel>(context, listen: false)
           .aggiungiFasciaOraria(widget.tutorId, _dataSelezionata!, _oraInizioSelezionata!, oraFine);
+
+      // Resetta l'ora selezionata dopo l'aggiunta
+      setState(() {
+        _oraInizioSelezionata = null;
+      });
     }
   }
 
@@ -155,8 +184,12 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
             ],
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _aggiungiFasciaOraria,
-              child: const Text('Aggiungi Fascia Oraria'),
+              onPressed: calendarioViewModel.isLoading ? null : _aggiungiFasciaOraria,
+              child: calendarioViewModel.isLoading
+                  ? const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              )
+                  : const Text('Aggiungi Fascia Oraria'),
             ),
             // Aggiungi il ValueListenableBuilder qui per mostrare eventuali errori
             ValueListenableBuilder<String?>(

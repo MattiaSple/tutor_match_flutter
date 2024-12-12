@@ -9,6 +9,7 @@ class CalendarioViewModel extends ChangeNotifier {
   final FirebaseUtil _firebaseUtil = FirebaseUtil();
   List<Calendario> fasceOrarie = [];
   String? message;
+  bool isLoading = false;
   StreamSubscription? _fasceOrarieSubscription; // Subscription per ascoltare i cambiamenti in tempo reale
   ValueNotifier<String?> errorNotifier = ValueNotifier(null); // Notificatore per i messaggi di errore
 
@@ -67,14 +68,16 @@ class CalendarioViewModel extends ChangeNotifier {
   Future<void> aggiungiFasciaOraria(
       String tutorId, DateTime data, TimeOfDay oraInizio, TimeOfDay oraFine) async {
 
-    // Ottieni il DocumentReference per il tutorId dal FirebaseUtil
-    final DocumentReference? tutorRef = await _firebaseUtil.getTutorReference(tutorId);
+    // Evita richieste duplicate se già in esecuzione
+    if (isLoading) return;
 
-    // Controlla se il tutorRef è null (se il tutor non esiste)
-    if (tutorRef == null) {
-      errorNotifier.value = 'Tutor non trovato, impossibile aggiungere la fascia oraria.';
-      return;
-    }
+    // Inizia il caricamento
+    isLoading = true;
+    notifyListeners();  // Aggiorna la UI
+
+    // Ottieni il DocumentReference per il tutorId dal FirebaseUtil
+    final DocumentReference tutorRef =
+    (await _firebaseUtil.getTutorReference(tutorId))!;
 
     // Formatta l'ora di inizio e fine in formato "HH:mm"
     final String formattedOraInizio = formatTimeOfDay(oraInizio);
@@ -89,31 +92,22 @@ class CalendarioViewModel extends ChangeNotifier {
       statoPren: false,
     );
 
-    // Controllo di sovrapposizione prima di fare la chiamata al database
-    bool sovrapposizione = fasceOrarie.any((fascia) =>
-    _compareDateOnly(fascia.data, nuovaFascia.data) == 0 && // Controlla se la data è la stessa
-        ((fascia.oraInizio.compareTo(nuovaFascia.oraInizio) >= 0 &&
-            fascia.oraInizio.compareTo(nuovaFascia.oraFine) < 0) ||
-            (fascia.oraFine.compareTo(nuovaFascia.oraInizio) > 0 &&
-                fascia.oraFine.compareTo(nuovaFascia.oraFine) <= 0)));
-
-    if (sovrapposizione) {
-      // Se c'è sovrapposizione, ritorna e non aggiunge la fascia
-      errorNotifier.value = 'Le fasce orarie non possono sovrapporsi.';
-      return;
-    }
-
     // Prova a inserire la nuova fascia nel database
     try {
       bool success = await _firebaseUtil.aggiungiFasciaOraria(nuovaFascia);
       print("GGGGGGGGGGGGGGGGGGGGGGGGGGGG");
       if (success) {
         ordinaFasceOrarie(); // Ordina la lista dopo l'aggiunta
+
       } else {
         errorNotifier.value = 'Errore nell\'aggiunta della fascia';
       }
     } catch (e) {
       errorNotifier.value = 'Errore durante l\'aggiunta della fascia oraria: ${e.toString()}';
+    } finally {
+      // Fine del caricamento
+      isLoading = false;
+      notifyListeners();  // Notifica la UI
     }
   }
 
@@ -129,7 +123,7 @@ class CalendarioViewModel extends ChangeNotifier {
   // Funzione di ordinamento delle fasce orarie
   void ordinaFasceOrarie() {
     fasceOrarie.sort((a, b) {
-      int dateComparison = _compareDateOnly(a.data, b.data);
+      int dateComparison = compareDateOnly(a.data, b.data);
       if (dateComparison != 0) {
         return dateComparison;
       } else {
@@ -139,7 +133,7 @@ class CalendarioViewModel extends ChangeNotifier {
   }
 
   // Funzione per confrontare solo anno, mese, giorno delle date
-  int _compareDateOnly(DateTime a, DateTime b) {
+  int compareDateOnly(DateTime a, DateTime b) {
     DateTime dateA = DateTime(a.year, a.month, a.day);
     DateTime dateB = DateTime(b.year, b.month, b.day);
     return dateA.compareTo(dateB);

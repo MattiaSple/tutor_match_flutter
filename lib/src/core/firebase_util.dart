@@ -300,15 +300,7 @@ class FirebaseUtil {
     try {
       // Recupera il documento del tutor con l'ID fornito
       DocumentReference tutorRef = _firestore.collection('utenti').doc(tutorId);
-
-      // Controlla se il documento esiste effettivamente
-      DocumentSnapshot tutorSnapshot = await tutorRef.get();
-      if (tutorSnapshot.exists) {
-        return tutorRef; // Ritorna il riferimento del documento
-      } else {
-        print("Tutor non trovato per l'ID $tutorId");
-        return null; // Ritorna null se il tutor non esiste
-      }
+      return tutorRef;
     } catch (e) {
       // Gestisci eventuali errori
       print('Errore nel recupero del DocumentReference: ${e.toString()}');

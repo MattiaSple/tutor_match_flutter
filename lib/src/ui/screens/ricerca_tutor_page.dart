@@ -15,7 +15,32 @@ class RicercaTutorPage extends StatefulWidget {
 
 class _RicercaTutorPageState extends State<RicercaTutorPage> {
   String? materiaSelezionata; // Memorizza la materia selezionata
-  final List<String> materieDisponibili = ['Matematica', 'Fisica', 'Chimica', 'Informatica']; // Materie esempio
+  final List<String> materieDisponibili = [
+    'Antropologia', 'Architettura', 'Arte',
+    'Astronomia', 'Biologia', 'Biotecnologie',
+    'Chimica', 'Chimica farmaceutica', 'Cinema e audiovisivo',
+    'Contabilità', 'Design', 'Diritto',
+    'Diritto commerciale', 'Diritto internazionale', 'Economia',
+    'Economia aziendale', 'Elettronica', 'Elettrotecnica',
+    'Filosofia', 'Fisica', 'Fisica nucleare',
+    'Fisioterapia', 'Fotografia', 'Francese',
+    'Geografia', 'Geologia', 'Giurisprudenza',
+    'Informatica', 'Ingegneria civile', 'Ingegneria elettronica',
+    'Ingegneria meccanica', 'Inglese', 'Italiano',
+    'Latino', 'Letteratura italiana', 'Logistica',
+    'Marketing', 'Matematica', 'Medicina',
+    'Meccanica', 'Musica', 'Odontoiatria',
+    'Pedagogia', 'Psicologia', 'Psicologia clinica',
+    'Relazioni internazionali', 'Restauro', 'Robotica',
+    'Russo', 'Scenografia', 'Scienze ambientali',
+    'Scienze della comunicazione', 'Scienze della terra', 'Scienze dell\'educazione',
+    'Scienze infermieristiche', 'Scienze motorie', 'Sociologia',
+    'Spagnolo', 'Statistica', 'Storia',
+    'Storia contemporanea', 'Storia dell\'arte', 'Storia moderna',
+    'Teatro', 'Tedesco', 'Veterinaria',
+  ];
+
+  final TextEditingController _cittaController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +49,8 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ricerca Tutor'),
+        centerTitle: true, // Centra il titolo
+        automaticallyImplyLeading: false, // Rimuove la freccia indietro
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -31,12 +58,24 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Seleziona la materia di interesse:',
+              'Filtra per Materia e Città:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
-            // Dropdown per selezionare la materia
+            // Campo di ricerca per città
+            TextField(
+              controller: _cittaController,
+              decoration: const InputDecoration(
+                labelText: 'Inserisci Città',
+                prefixIcon: Icon(Icons.location_city),
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Dropdown per la materia
             DropdownButton<String>(
               value: materiaSelezionata,
               hint: const Text('Scegli una materia'),
@@ -58,10 +97,21 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
 
             // Bottone per cercare gli annunci
             ElevatedButton(
-              onPressed: materiaSelezionata == null
-                  ? null
-                  : () {
-                ricercaViewModel.cercaAnnunciPerMateria(materiaSelezionata!);
+              onPressed: () {
+                if (materiaSelezionata != null &&
+                    _cittaController.text.isNotEmpty) {
+                  ricercaViewModel.cercaAnnunciPerCittaEMateria(
+                    _cittaController.text.trim(),
+                    materiaSelezionata!,
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Inserisci sia la città che la materia."),
+                      backgroundColor: Colors.black,
+                    ),
+                  );
+                }
               },
               child: const Text('Cerca Annunci'),
             ),
@@ -78,7 +128,8 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
                   final annuncio = ricercaViewModel.annunci[index];
 
                   return FutureBuilder(
-                    future: ricercaViewModel.getTutorFromAnnuncio(annuncio.tutorRef), // Usa DocumentReference qui
+                    future: ricercaViewModel.getTutorFromAnnuncio(
+                        annuncio.tutorRef),
                     builder: (context, AsyncSnapshot snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const ListTile(
@@ -92,15 +143,18 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
                         final utente = snapshot.data;
 
                         final mediaFeedback = (utente.feedback.isNotEmpty)
-                            ? (utente.feedback.map((f) => int.tryParse(f.toString())).reduce((a, b) => a + b) / utente.feedback.length).toStringAsFixed(1)
+                            ? (utente.feedback
+                            .map((f) => int.tryParse(f.toString()))
+                            .reduce((a, b) => a + b) /
+                            utente.feedback.length)
+                            .toStringAsFixed(1)
                             : 'N/A';
-
 
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4D7881), // Colore principale dell'app
+                            color: const Color(0xFF4D7881),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: ListTile(
@@ -112,20 +166,20 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
                               ),
                             ),
                             subtitle: Text(
-                              'Feedback: $mediaFeedback\nResidenza: ${utente.residenza}\nMateria: ${annuncio.materia}',
+                              'Feedback: $mediaFeedback\nResidenza: ${utente
+                                  .residenza}\nMateria: ${annuncio.materia}',
                               style: const TextStyle(color: Colors.white70),
                             ),
-                            // Dentro il metodo onTap di ListTile
                             onTap: () {
-                              // Naviga alla pagina di scelta degli orari passando anche l'ID dell'annuncio
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => OrariDisponibiliPage(
-                                    tutorId: utente.userId,
-                                    userId: widget.userId,
-                                    annuncioId: annuncio.id, // Passa l'ID dell'annuncio
-                                  ),
+                                  builder: (context) =>
+                                      OrariDisponibiliPage(
+                                        tutorId: utente.userId,
+                                        userId: widget.userId,
+                                        annuncioId: annuncio.id,
+                                      ),
                                 ),
                               );
                             },

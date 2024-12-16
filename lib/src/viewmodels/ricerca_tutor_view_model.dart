@@ -36,4 +36,29 @@ class RicercaTutorViewModel extends ChangeNotifier {
       throw Exception('Errore nel caricamento del tutor: $e');
     }
   }
+  // Ricerca per Materia e Città
+  Future<void> cercaAnnunciPerCittaEMateria(String citta, String materia) async {
+    try {
+      QuerySnapshot annuncioSnapshot = await FirebaseFirestore.instance
+          .collection('annunci')
+          .where('materia', isEqualTo: materia)
+          .get();
+
+      // Filtra gli annunci in base alla residenza del tutor
+      List<Annuncio> filtrati = [];
+      for (var doc in annuncioSnapshot.docs) {
+        Annuncio annuncio = Annuncio.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+        Utente tutor = await _firebaseUtil.getTutorByDocumentReference(annuncio.tutorRef);
+
+        if (tutor.residenza.toLowerCase().contains(citta.toLowerCase())) {
+          filtrati.add(annuncio);
+        }
+      }
+
+      annunci = filtrati;
+      notifyListeners();
+    } catch (e) {
+      print("Errore nella ricerca per città e materia: $e");
+    }
+  }
 }

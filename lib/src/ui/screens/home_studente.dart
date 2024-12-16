@@ -26,6 +26,8 @@ class _HomeStudenteState extends State<HomeStudente> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Studente'),
+        centerTitle: true, // Centra il titolo
+        automaticallyImplyLeading: false, // Rimuove la freccia indietro
       ),
       body: Consumer<HomeStudenteViewModel>(
         builder: (context, homeStudenteViewModel, child) {

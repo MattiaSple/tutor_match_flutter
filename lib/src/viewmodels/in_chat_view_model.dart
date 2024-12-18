@@ -7,8 +7,9 @@ class InChatViewModel extends ChangeNotifier {
   final FirebaseUtileChat _firebaseUtileChat = FirebaseUtileChat();
 
   // Stream per aggiornamenti in tempo reale della chat
-  Stream<List<Messaggio>> getMessagesStream(String chatId) {
-    return _firebaseUtileChat.getMessagesStream(chatId).map((event) {
+  Stream<List<Messaggio>> getMessagesStream(String chatId, String email) {
+    return _firebaseUtileChat.getMessagesStream(chatId, email).map((event) {
+      _firebaseUtileChat.
       if (event.snapshot.value != null) {
         Map<dynamic, dynamic> messagesData = event.snapshot.value as Map<dynamic, dynamic>;
         return messagesData.entries
@@ -49,5 +50,8 @@ class InChatViewModel extends ChangeNotifier {
       print('Errore nel recupero del nome e cognome da email: $e');
       throw e;
     }
+  }
+  Future<void> unreadBySetToFalse(String chatId)async {
+    _firebaseUtileChat.unreadBySetToFalse(chatId);
   }
 }

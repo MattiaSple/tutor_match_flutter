@@ -17,7 +17,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    // Chiama listenToChats una sola volta, quando la pagina è creata
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ChatViewModel>(context, listen: false).listenToChats(widget.userId);
     });
@@ -30,8 +29,8 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Le tue chat'),
-        centerTitle: true, // Centra il titolo
-        automaticallyImplyLeading: false, // Rimuove la freccia indietro
+        centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: chatViewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -39,52 +38,65 @@ class _ChatPageState extends State<ChatPage> {
         itemCount: chatViewModel.chats.length,
         itemBuilder: (context, index) {
           final chat = chatViewModel.chats[index];
-          String otherParticipantName = chat.participantsNames
-              .firstWhere((name) => name != chatViewModel.loggedUserName, orElse: () => 'Sconosciuto');
+          final otherParticipantName = chat.participantsNames.firstWhere(
+                (name) => name != chatViewModel.loggedUserName,
+            orElse: () => 'Sconosciuto',
+          );
 
-          return ListTile(
-            title: Text(otherParticipantName),
-            subtitle: Text(chat.lastMessage),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(chat.subject),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () async {
-                    final confirm = await showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text('Conferma eliminazione'),
-                        content: Text('Sei sicuro di voler eliminare questa chat?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text('Annulla'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text('Elimina'),
-                          ),
-                        ],
-                      ),
-                    );
+          final isUnread = chat.lastMessage.unreadBy.contains(chatViewModel.loggedUserEmail);
 
-                    if (confirm == true) {
-                      chatViewModel.eliminaChat(chat.id);
-                    }
-                  },
-                ),
-              ],
+          return Container(
+            color: isUnread ? Colors.yellow : Colors.transparent,
+            child: ListTile(
+              title: Text(otherParticipantName),
+              subtitle: Text(
+                chat.lastMessage?.text ?? "Nessun messaggio",
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(chat.subject),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () async {
+                      final confirm = await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Conferma eliminazione'),
+                          content: const Text('Sei sicuro di voler eliminare questa chat?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Annulla'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Elimina'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true) {
+                        chatViewModel.eliminaChat(chat.id);
+                      }
+                    },
+                  ),
+                ],
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => InChatPage(
+                      chatId: chat.id,
+                      userId: widget.userId,
+                      isUnread: isUnread,
+                    ),
+                  ),
+                );
+              },
             ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => InChatPage(chatId: chat.id, userId: widget.userId),
-                ),
-              );
-            },
           );
         },
       ),

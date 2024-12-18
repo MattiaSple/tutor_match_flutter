@@ -6,9 +6,14 @@ import '../../models/messaggio.dart';
 class InChatPage extends StatefulWidget {
   final String chatId;
   final String userId;
+  final bool isUnread;
 
-  const InChatPage({required this.chatId, required this.userId, Key? key}) : super(key: key);
-
+  const InChatPage({
+    required this.chatId,
+    required this.userId,
+    required this.isUnread,
+    Key? key,
+  }) : super(key: key);
   @override
   _InChatPageState createState() => _InChatPageState();
 }
@@ -60,7 +65,9 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
   Widget build(BuildContext context) {
     super.build(context);
     final inChatViewModel = Provider.of<InChatViewModel>(context, listen: false);
-
+    if (widget.isUnread){
+      inChatViewModel.unreadBySetToFalse(widget.chatId);
+    }
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -70,7 +77,7 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
         children: [
           Expanded(
             child: StreamBuilder<List<Messaggio>>(
-              stream: inChatViewModel.getMessagesStream(widget.chatId),
+              stream: inChatViewModel.getMessagesStream(widget.chatId, userEmail),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: Text("Nessun messaggio."));

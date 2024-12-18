@@ -13,23 +13,47 @@ class FirebaseUtileChat {
     }
   }
 
-  Stream<DatabaseEvent> getMessagesStream(String chatId) {
+  Future<Stream<DatabaseEvent>> getMessagesStream(String chatId, String email) async {
+    final snapshot = await _chatRef.child(chatId).child('lastMessage').once();
+    if (snapshot.snapshot.exists) {
+      final lastMessage = snapshot.snapshot.value as Map?;
+      if (lastMessage != null && lastMessage['unreadBy'] != null) {
+        if (lastMessage['unreadBy'].contains(email)) {
+          await _chatRef.child(chatId).child('lastMessage').update({
+            'unreadBy': "", // Aggiorna il campo a stringa vuota
+          });
+        }
+      }
+    }
+    // Ritorna lo stream dei messaggi
     return _chatRef.child(chatId).child('messages').onValue;
   }
 
   Future<void> sendMessage(String chatId, String senderId, String text) async {
     try {
+      DataSnapshot chatSnapshot = await _chatRef.child(chatId).get();
+      if (!chatSnapshot.exists) {
+        throw Exception("Chat non trovata: $chatId");
+      }
+
+      Map<dynamic, dynamic> chatData = chatSnapshot.value as Map<dynamic, dynamic>;
+      List<dynamic> participants = chatData['participants'] ?? [];
+
+      String unreadBy = participants.firstWhere((participant) => participant != senderId, orElse: () => "");
+
       DatabaseReference newMessageRef = _chatRef.child(chatId).child('messages').push();
       await newMessageRef.set({
         'senderId': senderId,
         'text': text,
-        'timestamp': ServerValue.timestamp, // Usa il timestamp del server qui
+        'timestamp': ServerValue.timestamp,
+        'unreadBy': unreadBy.isNotEmpty ? [unreadBy] : [],
       });
 
       await _chatRef.child(chatId).child('lastMessage').set({
         'senderId': senderId,
         'text': text,
-        'timestamp': ServerValue.timestamp, // Anche qui usa il timestamp del server
+        'timestamp': ServerValue.timestamp,
+        'unreadBy': unreadBy.isNotEmpty ? [unreadBy] : [],
       });
     } catch (e) {
       throw Exception("Errore nell'invio del messaggio: $e");
@@ -66,16 +90,36 @@ class FirebaseUtileChat {
       throw Exception("Errore nel controllo dell'esistenza della chat: $e");
     }
   }
-  // Ottiene lo stream in tempo reale di tutte le chat
+
   Stream<DatabaseEvent> getAllChatsStream() {
-    return _chatRef.onValue; // Restituisce un flusso degli eventi di cambiamento
+    return _chatRef.onValue;
   }
+
   Future<void> deleteChat(String chatId) async {
     try {
       await _chatRef.child(chatId).remove();
       print("Chat eliminata con successo: $chatId");
     } catch (e) {
       throw Exception("Errore durante l'eliminazione della chat: $e");
+    }
+  }
+  Future<void> unreadBySetToFalse(String chatId) async {
+    try {
+      // Recupera i dati della chat specifica
+      DataSnapshot chatSnapshot = await _chatRef.child(chatId).get();
+
+      if (!chatSnapshot.exists) {
+        throw Exception("Chat non trovata: $chatId");
+      }
+
+      // Aggiorna il lastMessage impostando unreadBy come lista vuota
+      await _chatRef.child(chatId).child('lastMessage').update({
+        'unreadBy': [],
+      });
+
+      print("UnreadBy impostato a lista vuota per la chat: $chatId");
+    } catch (e) {
+      throw Exception("Errore durante l'aggiornamento di unreadBy: $e");
     }
   }
 }

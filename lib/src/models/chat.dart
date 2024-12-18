@@ -1,7 +1,9 @@
+import 'messaggio.dart';
+
 class Chat {
   final String id;
   final String subject;
-  final String lastMessage;
+  final Messaggio lastMessage;
   final List<String> participantsNames;
 
   Chat({
@@ -11,12 +13,11 @@ class Chat {
     required this.participantsNames,
   });
 
-  // Factory method per creare una Chat da Firebase
   factory Chat.fromMap(String id, Map<dynamic, dynamic> data) {
     return Chat(
       id: id,
       subject: data['subject'] ?? '',
-      lastMessage: data['lastMessage']['text'] ?? '',
+      lastMessage: Messaggio.fromMap(data['lastMessage'] ?? {}),
       participantsNames: List<String>.from(data['participantsNames'] ?? []),
     );
   }

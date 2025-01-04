@@ -43,8 +43,6 @@ class FirebaseUtileChat {
         'timestamp': ServerValue.timestamp,
         'unreadBy': unreadBy.isNotEmpty ? [unreadBy] : [],
       });
-
-
     } catch (e) {
       throw Exception("Errore nell'invio del messaggio: $e");
     }

@@ -35,7 +35,8 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
   }
 
   Future<void> _loadUserEmail() async {
-    final inChatViewModel = Provider.of<InChatViewModel>(context, listen: false);
+    final inChatViewModel = Provider.of<InChatViewModel>(
+        context, listen: false);
     userEmail = await inChatViewModel.getEmail(widget.userId);
     setState(() {}); // Aggiorna lo stato una volta caricata l'email
   }
@@ -64,10 +65,18 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final inChatViewModel = Provider.of<InChatViewModel>(context, listen: false);
-    if (widget.isUnread){
-      inChatViewModel.unreadBySetToFalse(widget.chatId);
+    final inChatViewModel = Provider.of<InChatViewModel>(
+        context, listen: false);
+
+    // Verifica che userEmail non sia null
+    if (userEmail == null) {
+      return const Center(child: CircularProgressIndicator());
     }
+
+    if (widget.isUnread) {
+      inChatViewModel.unreadBySetToFalse(widget.chatId, userEmail!);
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -77,28 +86,32 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
         children: [
           Expanded(
             child: StreamBuilder<List<Messaggio>>(
-              stream: inChatViewModel.getMessagesStream(widget.chatId, userEmail),
+              stream: inChatViewModel.getMessagesStream(widget.chatId),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: Text("Nessun messaggio."));
                 }
 
                 final messages = snapshot.data!;
-                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                WidgetsBinding.instance.addPostFrameCallback((_) =>
+                    _scrollToBottom());
+                inChatViewModel.unreadBySetToFalse(widget.chatId, userEmail!);
 
                 return ListView.builder(
                   controller: _scrollController,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    bool isMine = message.senderId == userEmail; // Confronto con l'email caricata
+                    bool isMine = message.senderId == userEmail;
 
                     return FutureBuilder<String>(
-                      future: inChatViewModel.getSenderNameByEmail(message.senderId),
+                      future: inChatViewModel.getSenderNameByEmail(
+                          message.senderId),
                       builder: (context, snapshot) {
                         final senderName = snapshot.data ?? '';
                         return Align(
-                          alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+                          alignment: isMine ? Alignment.centerRight : Alignment
+                              .centerLeft,
                           child: Container(
                             margin: EdgeInsets.only(
                               top: 5,
@@ -108,17 +121,20 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
                             ),
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isMine ? Colors.blueAccent : Colors.grey[300],
+                              color: isMine ? Colors.blueAccent : Colors
+                                  .grey[300],
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Column(
-                              crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                              crossAxisAlignment: isMine ? CrossAxisAlignment
+                                  .end : CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   senderName,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: isMine ? Colors.white70 : Colors.black87,
+                                    color: isMine ? Colors.white70 : Colors
+                                        .black87,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -126,15 +142,18 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
                                 Text(
                                   message.text,
                                   style: TextStyle(
-                                    color: isMine ? Colors.white : Colors.black87,
+                                    color: isMine ? Colors.white : Colors
+                                        .black87,
                                   ),
                                 ),
                                 const SizedBox(height: 5),
                                 Text(
-                                  DateTime.fromMillisecondsSinceEpoch(message.timestamp).toString(),
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      message.timestamp).toString(),
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: isMine ? Colors.white60 : Colors.black54,
+                                    color: isMine ? Colors.white60 : Colors
+                                        .black54,
                                   ),
                                 ),
                               ],
@@ -156,7 +175,8 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
                   child: TextField(
                     focusNode: _focusNode,
                     controller: messageController,
-                    decoration: const InputDecoration(hintText: "Scrivi un messaggio"),
+                    decoration: const InputDecoration(
+                        hintText: "Scrivi un messaggio"),
                     onTap: () {
                       FocusScope.of(context).requestFocus(_focusNode);
                       _scrollToBottom();
@@ -168,7 +188,8 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
                   onPressed: () async {
                     final text = messageController.text;
                     if (text.isNotEmpty) {
-                      await inChatViewModel.sendMessage(widget.chatId, widget.userId, text);
+                      await inChatViewModel.sendMessage(
+                          widget.chatId, widget.userId, text);
                       messageController.clear();
                       _scrollToBottom();
                     }

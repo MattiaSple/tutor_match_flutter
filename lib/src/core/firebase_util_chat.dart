@@ -13,18 +13,7 @@ class FirebaseUtileChat {
     }
   }
 
-  Future<Stream<DatabaseEvent>> getMessagesStream(String chatId, String email) async {
-    final snapshot = await _chatRef.child(chatId).child('lastMessage').once();
-    if (snapshot.snapshot.exists) {
-      final lastMessage = snapshot.snapshot.value as Map?;
-      if (lastMessage != null && lastMessage['unreadBy'] != null) {
-        if (lastMessage['unreadBy'].contains(email)) {
-          await _chatRef.child(chatId).child('lastMessage').update({
-            'unreadBy': "", // Aggiorna il campo a stringa vuota
-          });
-        }
-      }
-    }
+  Future<Stream<DatabaseEvent>> getMessagesStream(String chatId) async {
     // Ritorna lo stream dei messaggi
     return _chatRef.child(chatId).child('messages').onValue;
   }
@@ -42,6 +31,12 @@ class FirebaseUtileChat {
       String unreadBy = participants.firstWhere((participant) => participant != senderId, orElse: () => "");
 
       DatabaseReference newMessageRef = _chatRef.child(chatId).child('messages').push();
+      await _chatRef.child(chatId).child('lastMessage').set({
+        'senderId': senderId,
+        'text': text,
+        'timestamp': ServerValue.timestamp,
+        'unreadBy': unreadBy.isNotEmpty ? [unreadBy] : [],
+      });
       await newMessageRef.set({
         'senderId': senderId,
         'text': text,
@@ -49,12 +44,7 @@ class FirebaseUtileChat {
         'unreadBy': unreadBy.isNotEmpty ? [unreadBy] : [],
       });
 
-      await _chatRef.child(chatId).child('lastMessage').set({
-        'senderId': senderId,
-        'text': text,
-        'timestamp': ServerValue.timestamp,
-        'unreadBy': unreadBy.isNotEmpty ? [unreadBy] : [],
-      });
+
     } catch (e) {
       throw Exception("Errore nell'invio del messaggio: $e");
     }
@@ -103,7 +93,7 @@ class FirebaseUtileChat {
       throw Exception("Errore durante l'eliminazione della chat: $e");
     }
   }
-  Future<void> unreadBySetToFalse(String chatId) async {
+  Future<void> unreadBySetToFalse(String chatId, String userEmail) async {
     try {
       // Recupera i dati della chat specifica
       DataSnapshot chatSnapshot = await _chatRef.child(chatId).get();
@@ -112,14 +102,23 @@ class FirebaseUtileChat {
         throw Exception("Chat non trovata: $chatId");
       }
 
-      // Aggiorna il lastMessage impostando unreadBy come lista vuota
-      await _chatRef.child(chatId).child('lastMessage').update({
-        'unreadBy': [],
-      });
+      // Controlla se unreadBy contiene l'email dell'utente
+      Map<dynamic, dynamic>? lastMessage = chatSnapshot.child('lastMessage').value as Map<dynamic, dynamic>?;
+      List<dynamic>? unreadBy = lastMessage?['unreadBy'] as List<dynamic>?;
 
-      print("UnreadBy impostato a lista vuota per la chat: $chatId");
+      if (unreadBy != null && unreadBy.contains(userEmail)) {
+        // Aggiorna il lastMessage impostando unreadBy come lista vuota
+        await _chatRef.child(chatId).child('lastMessage').update({
+          'unreadBy': [],
+        });
+
+        print("UnreadBy impostato a lista vuota per la chat: $chatId");
+      } else {
+        print("L'email non è presente nel campo unreadBy, nessun aggiornamento effettuato.$unreadBy" );
+      }
     } catch (e) {
       throw Exception("Errore durante l'aggiornamento di unreadBy: $e");
     }
   }
+
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import '../core/firebase_util_chat.dart';
 import '../core/firebase_util.dart';
@@ -7,15 +8,16 @@ class InChatViewModel extends ChangeNotifier {
   final FirebaseUtileChat _firebaseUtileChat = FirebaseUtileChat();
 
   // Stream per aggiornamenti in tempo reale della chat
-  Stream<List<Messaggio>> getMessagesStream(String chatId, String email) {
-    return _firebaseUtileChat.getMessagesStream(chatId, email).map((event) {
-      _firebaseUtileChat.
+  Stream<List<Messaggio>> getMessagesStream(String chatId) async* {
+    final stream = await _firebaseUtileChat.getMessagesStream(chatId);
+    yield* stream.asyncMap((event) {
       if (event.snapshot.value != null) {
-        Map<dynamic, dynamic> messagesData = event.snapshot.value as Map<dynamic, dynamic>;
-        return messagesData.entries
+        final messagesData = event.snapshot.value as Map<dynamic, dynamic>;
+        final messages = messagesData.entries
             .map((entry) => Messaggio.fromMap(entry.value))
             .toList()
           ..sort((a, b) => a.timestamp.compareTo(b.timestamp)); // Ordina per data
+        return messages;
       }
       return [];
     });
@@ -51,7 +53,7 @@ class InChatViewModel extends ChangeNotifier {
       throw e;
     }
   }
-  Future<void> unreadBySetToFalse(String chatId)async {
-    _firebaseUtileChat.unreadBySetToFalse(chatId);
+  Future<void> unreadBySetToFalse(String chatId, String userEmail)async {
+    _firebaseUtileChat.unreadBySetToFalse(chatId, userEmail);
   }
 }

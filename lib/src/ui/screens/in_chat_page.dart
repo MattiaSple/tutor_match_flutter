@@ -32,13 +32,17 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadUserEmail(); // Carica l'email all'inizio
+
+    // Aggiungi un listener al focusNode per rilevare quando la tastiera si apre
+    _focusNode.addListener(_onKeyboardOpened);
   }
 
-  Future<void> _loadUserEmail() async {
-    final inChatViewModel = Provider.of<InChatViewModel>(
-        context, listen: false);
-    userEmail = await inChatViewModel.getEmail(widget.userId);
-    setState(() {}); // Aggiorna lo stato una volta caricata l'email
+  void _onKeyboardOpened() {
+    if (_focusNode.hasFocus) {
+      Future.delayed(const Duration(seconds: 1), () {
+        _scrollToBottom();
+      });
+    }
   }
 
   @override
@@ -46,8 +50,18 @@ class _InChatPageState extends State<InChatPage> with WidgetsBindingObserver, Au
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     messageController.dispose();
+
+    // Rimuovi il listener dal focusNode
+    _focusNode.removeListener(_onKeyboardOpened);
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserEmail() async {
+    final inChatViewModel = Provider.of<InChatViewModel>(
+        context, listen: false);
+    userEmail = await inChatViewModel.getEmail(widget.userId);
+    setState(() {}); // Aggiorna lo stato una volta caricata l'email
   }
 
   void _scrollToBottom() {

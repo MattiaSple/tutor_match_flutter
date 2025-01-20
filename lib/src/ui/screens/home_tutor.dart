@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tutormatch/src/viewmodels/annuncio_view_model.dart';
+import 'package:flutter/material.dart'; // Per costruire l'interfaccia utente.
+import 'package:provider/provider.dart'; // Per la gestione dello stato tramite Provider.
+import 'package:tutormatch/src/viewmodels/annuncio_view_model.dart'; // ViewModel per gestire gli annunci.
 
 class HomeTutor extends StatefulWidget {
-  final String userId;
-  final bool ruolo;
+  final String userId; // ID dell'utente corrente.
+  final bool ruolo; // Ruolo dell'utente (true = tutor, false = studente).
 
   const HomeTutor({required this.userId, required this.ruolo, super.key});
 
@@ -13,7 +13,9 @@ class HomeTutor extends StatefulWidget {
 }
 
 class _HomeTutorState extends State<HomeTutor> {
-  String? selectedMateria;
+  String? selectedMateria; // Materia selezionata dal tutor.
+
+  // Lista delle materie disponibili.
   List<String> materie = [
     'Antropologia', 'Architettura', 'Arte',
     'Astronomia', 'Biologia', 'Biotecnologie',
@@ -39,43 +41,42 @@ class _HomeTutorState extends State<HomeTutor> {
     'Teatro', 'Tedesco', 'Veterinaria',
   ];
 
-
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Chiama la funzione per recuperare gli annunci dell'utente
+    // Recupera gli annunci per l'utente corrente.
     final annuncioViewModel = Provider.of<AnnuncioViewModel>(context, listen: false);
     annuncioViewModel.getAnnunciByUserId(widget.userId);
   }
 
-  // Funzione per creare l'annuncio
+  // Funzione per creare un nuovo annuncio.
   void _creaAnnuncio(AnnuncioViewModel annuncioViewModel) {
     if (selectedMateria != null) {
-      // Controlla se la materia selezionata è già presente negli annunci
+      // Controlla se esiste già un annuncio per la materia selezionata.
       bool materiaEsistente = annuncioViewModel.annunci.any((annuncio) => annuncio['materia'] == selectedMateria);
 
       if (materiaEsistente) {
-        // Mostra un messaggio di errore se l'annuncio per la materia esiste già
+        // Mostra un messaggio di errore se l'annuncio esiste già.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Annuncio già esistente per la materia: $selectedMateria')),
         );
       } else {
-        // Crea l'annuncio se non esiste ancora
+        // Crea un nuovo annuncio se non esiste.
         annuncioViewModel.creaAnnuncio(widget.userId, selectedMateria!);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Annuncio creato con successo per materia: $selectedMateria')),
         );
       }
     } else {
+      // Mostra un messaggio se non è stata selezionata alcuna materia.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Seleziona una materia')),
       );
     }
   }
 
-  // Funzione per eliminare un annuncio
+  // Funzione per eliminare un annuncio esistente.
   void _eliminaAnnuncio(String annuncioId, AnnuncioViewModel annuncioViewModel) {
     annuncioViewModel.eliminaAnnuncio(annuncioId);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -85,54 +86,57 @@ class _HomeTutorState extends State<HomeTutor> {
 
   @override
   Widget build(BuildContext context) {
-    final annuncioViewModel = Provider.of<AnnuncioViewModel>(context);
+    final annuncioViewModel = Provider.of<AnnuncioViewModel>(context); // Recupera il ViewModel degli annunci.
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Tutor'),
-        centerTitle: true, // Centra il titolo
-        automaticallyImplyLeading: false, // Rimuove la freccia indietro
+        title: const Text('Home Tutor'), // Titolo della pagina.
+        centerTitle: true, // Centra il titolo nell'AppBar.
+        automaticallyImplyLeading: false, // Rimuove il pulsante di navigazione indietro.
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0), // Aggiunge margini interni.
         child: Container(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.8, // Define max height
+            maxHeight: MediaQuery.of(context).size.height * 0.8, // Imposta l'altezza massima.
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min, // Colonna con altezza minima necessaria.
             children: [
+              // Dropdown per selezionare una materia.
               DropdownButton<String>(
-                hint: const Text('Seleziona una materia'),
-                value: selectedMateria,
+                hint: const Text('Seleziona una materia'), // Testo predefinito.
+                value: selectedMateria, // Valore corrente del dropdown.
                 onChanged: (String? newValue) {
                   setState(() {
-                    selectedMateria = newValue;
+                    selectedMateria = newValue; // Aggiorna la materia selezionata.
                   });
                 },
                 items: materie.map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
-                    child: Text(value),
+                    child: Text(value), // Mostra il nome della materia.
                   );
                 }).toList(),
               ),
+              // Bottone per creare un annuncio.
               ElevatedButton(
                 onPressed: () => _creaAnnuncio(annuncioViewModel),
                 child: const Text('Crea Annuncio'),
               ),
+              // Lista degli annunci creati.
               Flexible(
-                fit: FlexFit.loose,
+                fit: FlexFit.loose, // Adatta l'altezza della lista.
                 child: ListView.builder(
-                  itemCount: annuncioViewModel.annunci.length,
+                  itemCount: annuncioViewModel.annunci.length, // Numero di annunci disponibili.
                   itemBuilder: (context, index) {
-                    final annuncio = annuncioViewModel.annunci[index];
+                    final annuncio = annuncioViewModel.annunci[index]; // Annuncio corrente.
                     return ListTile(
-                      title: Text(annuncio['materia']),
+                      title: Text(annuncio['materia']), // Mostra la materia dell'annuncio.
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete),
+                        icon: const Icon(Icons.delete), // Icona per eliminare l'annuncio.
                         onPressed: () {
-                          _eliminaAnnuncio(annuncio["id"], annuncioViewModel);
+                          _eliminaAnnuncio(annuncio["id"], annuncioViewModel); // Elimina l'annuncio.
                         },
                       ),
                     );

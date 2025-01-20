@@ -6,7 +6,7 @@ class Utente {
   bool ruolo; // true = tutor, false = studente
   List<String> tutorDaValutare; // Lista di ID dei tutor da valutare
   List<int> feedback; // Lista di feedback numerici
-  String residenza; // Aggiunto il campo residenza
+  String residenza;
 
   Utente({
     required this.nome,
@@ -16,7 +16,7 @@ class Utente {
     required this.ruolo,
     required this.tutorDaValutare,
     required this.feedback,
-    required this.residenza, // Aggiunto nel costruttore
+    required this.residenza,
   });
 
   // Factory method per creare un Utente da un documento Firestore
@@ -42,7 +42,7 @@ class Utente {
       'ruolo': ruolo,
       'tutorDaValutare': tutorDaValutare,
       'feedback': feedback, // Rimane List<int> per salvare correttamente
-      'residenza': residenza, // Aggiungi il campo residenza
+      'residenza': residenza,
     };
   }
 }

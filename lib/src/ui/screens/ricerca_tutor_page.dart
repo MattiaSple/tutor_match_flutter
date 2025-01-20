@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:tutormatch/src/viewmodels/ricerca_tutor_view_model.dart';
 import 'package:tutormatch/src/ui/screens/orari_disponibili_page.dart'; // Aggiungi la pagina corretta per la navigazione
 
+// Classe che rappresenta la pagina di ricerca tutor
 class RicercaTutorPage extends StatefulWidget {
-  final String userId;
-  final bool ruolo;
+  final String userId; // ID dell'utente
+  final bool ruolo; // Ruolo dell'utente (true = tutor, false = studente)
 
   const RicercaTutorPage({required this.userId, required this.ruolo, super.key});
 
@@ -14,8 +15,8 @@ class RicercaTutorPage extends StatefulWidget {
 }
 
 class _RicercaTutorPageState extends State<RicercaTutorPage> {
-  String? materiaSelezionata; // Memorizza la materia selezionata
-  final List<String> materieDisponibili = [
+  String? materiaSelezionata; // Variabile per memorizzare la materia selezionata
+  final List<String> materieDisponibili = [ // Lista di tutte le materie disponibili
     'Antropologia', 'Architettura', 'Arte',
     'Astronomia', 'Biologia', 'Biotecnologie',
     'Chimica', 'Chimica farmaceutica', 'Cinema e audiovisivo',
@@ -40,17 +41,17 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
     'Teatro', 'Tedesco', 'Veterinaria',
   ];
 
-  final TextEditingController _cittaController = TextEditingController();
+  final TextEditingController _cittaController = TextEditingController(); // Controller per il campo di input della città
 
   @override
   Widget build(BuildContext context) {
-    final ricercaViewModel = Provider.of<RicercaTutorViewModel>(context);
+    final ricercaViewModel = Provider.of<RicercaTutorViewModel>(context); // ViewModel per la logica della ricerca
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ricerca Tutor'),
+        title: const Text('Ricerca Tutor'), // Titolo della pagina
         centerTitle: true, // Centra il titolo
-        automaticallyImplyLeading: false, // Rimuove la freccia indietro
+        automaticallyImplyLeading: false, // Rimuove il pulsante "indietro"
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -58,29 +59,28 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text(
-              'Filtra per Materia e Città:',
+              'Filtra per Materia e Città:', // Testo descrittivo
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
-            // Campo di ricerca per città
+            // Campo di input per la città
             TextField(
-              controller: _cittaController,
+              controller: _cittaController, // Associa il controller
               decoration: const InputDecoration(
                 labelText: 'Inserisci Città',
-                prefixIcon: Icon(Icons.location_city),
+                prefixIcon: Icon(Icons.location_city), // Icona accanto al campo
                 border: OutlineInputBorder(),
               ),
             ),
-
             const SizedBox(height: 16),
 
-            // Dropdown per la materia
+            // Dropdown per selezionare una materia
             DropdownButton<String>(
-              value: materiaSelezionata,
+              value: materiaSelezionata, // Materia attualmente selezionata
               hint: const Text('Scegli una materia'),
-              isExpanded: true,
-              items: materieDisponibili.map((String materia) {
+              isExpanded: true, // Allarga il dropdown per occupare tutta la larghezza
+              items: materieDisponibili.map((String materia) { // Crea una lista di elementi
                 return DropdownMenuItem<String>(
                   value: materia,
                   child: Text(materia),
@@ -88,23 +88,23 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
               }).toList(),
               onChanged: (String? nuovaMateria) {
                 setState(() {
-                  materiaSelezionata = nuovaMateria;
+                  materiaSelezionata = nuovaMateria; // Aggiorna la materia selezionata
                 });
               },
             ),
-
             const SizedBox(height: 16),
 
             // Bottone per cercare gli annunci
             ElevatedButton(
               onPressed: () {
-                if (materiaSelezionata != null &&
-                    _cittaController.text.isNotEmpty) {
+                // Controlla che sia stata selezionata una materia e inserita una città
+                if (materiaSelezionata != null && _cittaController.text.isNotEmpty) {
                   ricercaViewModel.cercaAnnunciPerCittaEMateria(
                     _cittaController.text.trim(),
                     materiaSelezionata!,
                   );
                 } else {
+                  // Mostra un messaggio di errore se mancano dati
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text("Inserisci sia la città che la materia."),
@@ -115,21 +115,20 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
               },
               child: const Text('Cerca Annunci'),
             ),
-
             const SizedBox(height: 16),
 
             // Lista degli annunci trovati
             Expanded(
               child: ricercaViewModel.annunci.isEmpty
-                  ? const Center(child: Text('Nessun annuncio trovato'))
+                  ? const Center(child: Text('Nessun annuncio trovato')) // Messaggio di fallback
                   : ListView.builder(
-                itemCount: ricercaViewModel.annunci.length,
+                itemCount: ricercaViewModel.annunci.length, // Numero di annunci trovati
                 itemBuilder: (context, index) {
-                  final annuncio = ricercaViewModel.annunci[index];
+                  final annuncio = ricercaViewModel.annunci[index]; // Singolo annuncio
 
+                  // FutureBuilder per caricare i dettagli del tutor
                   return FutureBuilder(
-                    future: ricercaViewModel.getTutorFromAnnuncio(
-                        annuncio.tutorRef),
+                    future: ricercaViewModel.getTutorFromAnnuncio(annuncio.tutorRef), // Ottiene il tutor
                     builder: (context, AsyncSnapshot snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const ListTile(
@@ -140,16 +139,15 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
                           title: Text('Errore nel caricamento del tutor'),
                         );
                       } else if (snapshot.hasData) {
-                        final utente = snapshot.data;
+                        final utente = snapshot.data; // Dettagli del tutor
 
+                        // Calcolo della media del feedback
                         final mediaFeedback = (utente.feedback.isNotEmpty)
-                            ? (utente.feedback
-                            .map((f) => int.tryParse(f.toString()))
-                            .reduce((a, b) => a + b) /
-                            utente.feedback.length)
-                            .toStringAsFixed(1)
+                            ? (utente.feedback.map((f) => int.tryParse(f.toString())).reduce((a, b) => a + b) /
+                            utente.feedback.length).toStringAsFixed(1)
                             : 'N/A';
 
+                        // Card per ogni tutor
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           padding: const EdgeInsets.all(16),
@@ -159,27 +157,26 @@ class _RicercaTutorPageState extends State<RicercaTutorPage> {
                           ),
                           child: ListTile(
                             title: Text(
-                              'Tutor: ${utente.nome} ${utente.cognome}',
+                              'Tutor: ${utente.nome} ${utente.cognome}', // Nome del tutor
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             subtitle: Text(
-                              'Feedback: $mediaFeedback\nResidenza: ${utente
-                                  .residenza}\nMateria: ${annuncio.materia}',
+                              'Feedback: $mediaFeedback\nResidenza: ${utente.residenza}\nMateria: ${annuncio.materia}', // Dettagli del tutor
                               style: const TextStyle(color: Colors.white70),
                             ),
                             onTap: () {
+                              // Navigazione alla pagina degli orari disponibili
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      OrariDisponibiliPage(
-                                        tutorId: utente.userId,
-                                        userId: widget.userId,
-                                        annuncioId: annuncio.id,
-                                      ),
+                                  builder: (context) => OrariDisponibiliPage(
+                                    tutorId: utente.userId, // ID del tutor
+                                    userId: widget.userId, // ID dello studente
+                                    annuncioId: annuncio.id, // ID dell'annuncio
+                                  ),
                                 ),
                               );
                             },

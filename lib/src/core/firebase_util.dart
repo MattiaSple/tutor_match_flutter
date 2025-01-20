@@ -8,14 +8,6 @@ import '../models/utente.dart';
 class FirebaseUtil {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-
-  //Future<void> verificaFirebaseInizializzato() async {
-    //if (Firebase.apps.isEmpty) {
-      //await Firebase.initializeApp();
-      //print("Firebase inizializzato correttamente.");
-    //}
-  //}
-
   // Recupera il ruolo dell'utente dal database
   Future<bool> getUserRole(String userId) async {
     try {

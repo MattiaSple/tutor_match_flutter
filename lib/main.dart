@@ -14,7 +14,7 @@ import 'package:tutormatch/src/viewmodels/in_chat_view_model.dart';
 import 'package:tutormatch/src/viewmodels/prenotazioni_view_model.dart';
 import 'package:tutormatch/src/viewmodels/profilo_view_model.dart';
 import 'package:tutormatch/src/viewmodels/chat_view_model.dart';
-import 'package:tutormatch/src/viewmodels/ricerca_tutor_view_model.dart'; // Aggiungi l'import per ChatViewModel
+import 'package:tutormatch/src/viewmodels/ricerca_tutor_view_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PrenotazioniViewModel()),
         ChangeNotifierProvider(create: (_) => ProfiloViewModel()),
         ChangeNotifierProvider(create: (_) => HomeStudenteViewModel()),
-        ChangeNotifierProvider(create: (_) => ChatViewModel()), // Aggiungi il ChatViewModel qui
+        ChangeNotifierProvider(create: (_) => ChatViewModel()),
         ChangeNotifierProvider(create: (_) => InChatViewModel()),
         ChangeNotifierProvider(create: (_) => CalendarioViewModel()),
         ChangeNotifierProvider(create: (_) => RicercaTutorViewModel()),

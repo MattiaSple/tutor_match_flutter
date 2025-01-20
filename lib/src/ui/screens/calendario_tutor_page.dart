@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:tutormatch/src/viewmodels/calendario_view_model.dart';
+import 'package:flutter/material.dart'; // Per costruire l'interfaccia utente.
+import 'package:provider/provider.dart'; // Per la gestione dello stato.
+import 'package:tutormatch/src/viewmodels/calendario_view_model.dart'; // ViewModel per la gestione del calendario.
 
 class CalendarioTutorPage extends StatefulWidget {
-  final String tutorId;  // ID del tutor
+  // ID del tutor per cui mostrare e gestire il calendario.
+  final String tutorId;
 
   const CalendarioTutorPage({required this.tutorId, super.key});
 
@@ -12,17 +13,19 @@ class CalendarioTutorPage extends StatefulWidget {
 }
 
 class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
-  DateTime? _dataSelezionata;
-  TimeOfDay? _oraInizioSelezionata;
-  String? erroreFascia;
+  DateTime? _dataSelezionata; // Data selezionata dall'utente.
+  TimeOfDay? _oraInizioSelezionata; // Ora di inizio selezionata dall'utente.
+  String? erroreFascia; // Messaggio di errore per le fasce orarie.
 
   @override
   void initState() {
     super.initState();
-    // Attiva il listener in tempo reale per le fasce orarie
-    Provider.of<CalendarioViewModel>(context, listen: false).listenToFasceOrarie(widget.tutorId, true);
+    // Ascolta in tempo reale le fasce orarie del tutor.
+    Provider.of<CalendarioViewModel>(context, listen: false)
+        .listenToFasceOrarie(widget.tutorId, true);
   }
 
+  // Permette all'utente di selezionare una data.
   Future<void> _selezionaData(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -33,50 +36,52 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
 
     if (picked != null) {
       setState(() {
-        _dataSelezionata = DateTime(picked.year, picked.month, picked.day, 0, 0, 0, 0, 0);
+        // Aggiorna la data selezionata.
+        _dataSelezionata = DateTime(picked.year, picked.month, picked.day);
       });
     }
   }
 
-
+  // Permette all'utente di selezionare un'ora di inizio.
   Future<void> _selezionaOraInizio(BuildContext context) async {
-
     if (_dataSelezionata == null) {
-      // Mostra uno SnackBar se la data non è stata selezionata
+      // Mostra un messaggio se la data non è stata selezionata.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Seleziona prima la data"),
           backgroundColor: Colors.black,
         ),
       );
-      return; // Esci dalla funzione
+      return; // Esce dalla funzione.
     }
 
     final now = DateTime.now();
-    final calendarioViewModel = Provider.of<CalendarioViewModel>(context, listen: false);
+    final calendarioViewModel =
+    Provider.of<CalendarioViewModel>(context, listen: false);
 
-    // Determina l'ora corrente se la data selezionata è oggi
+    // Determina se la data selezionata è oggi.
     final isToday = _dataSelezionata?.day == now.day &&
         _dataSelezionata?.month == now.month &&
         _dataSelezionata?.year == now.year;
 
+    // Recupera le fasce orarie esistenti per la data selezionata.
     final fasceEsistenti = calendarioViewModel.fasceOrarie.where((fascia) {
       return calendarioViewModel.compareDateOnly(fascia.data, _dataSelezionata!) == 0;
     }).toList();
 
+    // Filtra le ore disponibili.
     final availableHours = List<int>.generate(24, (index) => index).where((hour) {
       if (isToday && hour <= now.hour) {
-        return false; // Filtra ore passate
+        return false; // Esclude le ore passate.
       }
-      // Filtra le ore già presenti
+      // Esclude le ore già occupate.
       return !fasceEsistenti.any((fascia) {
         final inizio = int.parse(fascia.oraInizio.split(':')[0]);
         return hour == inizio;
       });
     }).toList();
 
-
-    // Mostra il selettore di ore con solo le ore disponibili
+    // Mostra un selettore con le ore disponibili.
     final pickedHour = await showModalBottomSheet<int>(
       context: context,
       builder: (BuildContext context) {
@@ -99,7 +104,7 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
                     return ListTile(
                       title: Text('${hour.toString().padLeft(2, '0')}:00'),
                       onTap: () {
-                        Navigator.of(context).pop(hour);
+                        Navigator.of(context).pop(hour); // Seleziona l'ora.
                       },
                     );
                   },
@@ -113,20 +118,21 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
 
     if (pickedHour != null) {
       setState(() {
+        // Aggiorna l'ora di inizio selezionata.
         _oraInizioSelezionata = TimeOfDay(hour: pickedHour, minute: 0);
         erroreFascia = null;
       });
     }
   }
 
-
-
+  // Formatta un oggetto TimeOfDay in formato "HH:mm".
   String formatTimeOfDay(TimeOfDay time) {
     final hours = time.hour.toString().padLeft(2, '0');
     final minutes = time.minute.toString().padLeft(2, '0');
     return '$hours:$minutes';
   }
 
+  // Aggiunge una fascia oraria al calendario.
   void _aggiungiFasciaOraria() {
     if (_dataSelezionata != null && _oraInizioSelezionata != null) {
       final oraFine = TimeOfDay(
@@ -134,10 +140,12 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
         minute: 0,
       );
 
+      // Chiede al ViewModel di aggiungere la fascia.
       Provider.of<CalendarioViewModel>(context, listen: false)
-          .aggiungiFasciaOraria(widget.tutorId, _dataSelezionata!, _oraInizioSelezionata!, oraFine);
+          .aggiungiFasciaOraria(
+          widget.tutorId, _dataSelezionata!, _oraInizioSelezionata!, oraFine);
 
-      // Resetta l'ora selezionata dopo l'aggiunta
+      // Resetta l'ora di inizio selezionata.
       setState(() {
         _oraInizioSelezionata = null;
       });
@@ -151,8 +159,8 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calendario Tutor'),
-        centerTitle: true, // Centra il titolo
-        automaticallyImplyLeading: false, // Rimuove la freccia indietro
+        centerTitle: true, // Centra il titolo.
+        automaticallyImplyLeading: false, // Nasconde la freccia indietro.
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -193,7 +201,6 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
               )
                   : const Text('Aggiungi Fascia Oraria'),
             ),
-            // Aggiungi il ValueListenableBuilder qui per mostrare eventuali errori
             ValueListenableBuilder<String?>(
               valueListenable: calendarioViewModel.errorNotifier,
               builder: (context, errorMessage, _) {
@@ -237,8 +244,10 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
                         if (fascia.statoPren) {
                           _showCannotDeleteDialog(context);
                         } else {
-                          Provider.of<CalendarioViewModel>(context, listen: false)
-                              .eliminaFasciaOraria(fascia.tutorRef.id, fascia.data, fascia.oraInizio);
+                          Provider.of<CalendarioViewModel>(context,
+                              listen: false)
+                              .eliminaFasciaOraria(fascia.tutorRef.id,
+                              fascia.data, fascia.oraInizio);
                         }
                       },
                     ),
@@ -253,6 +262,7 @@ class _CalendarioTutorPageState extends State<CalendarioTutorPage> {
   }
 }
 
+// Mostra un dialog per impedire l'eliminazione di una lezione prenotata.
 void _showCannotDeleteDialog(BuildContext context) {
   showDialog(
     context: context,
@@ -264,7 +274,7 @@ void _showCannotDeleteDialog(BuildContext context) {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Chiude il dialog
+              Navigator.of(context).pop(); // Chiude il dialog.
             },
             child: const Text("OK"),
           ),

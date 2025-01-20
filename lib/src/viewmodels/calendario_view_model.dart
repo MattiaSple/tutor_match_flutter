@@ -1,61 +1,72 @@
-import 'dart:async';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:tutormatch/src/models/calendario.dart';
-import 'package:tutormatch/src/core/firebase_util.dart';
+import 'dart:async'; // Per gestire stream e sottoscrizioni.
+import 'package:cloud_firestore/cloud_firestore.dart'; // Per interagire con il database Firestore.
+import 'package:flutter/material.dart'; // Per la gestione della UI con Flutter.
+import 'package:tutormatch/src/models/calendario.dart'; // Modello Calendario per rappresentare le fasce orarie.
+import 'package:tutormatch/src/core/firebase_util.dart'; // Utility per operazioni su Firebase.
 
 class CalendarioViewModel extends ChangeNotifier {
+  // Istanza di FirebaseUtil per interagire con il database.
   final FirebaseUtil _firebaseUtil = FirebaseUtil();
-  List<Calendario> fasceOrarie = [];
-  String? message;
-  bool isLoading = false;
-  StreamSubscription? _fasceOrarieSubscription; // Subscription per ascoltare i cambiamenti in tempo reale
-  ValueNotifier<String?> errorNotifier = ValueNotifier(null); // Notificatore per i messaggi di errore
 
+  // Lista delle fasce orarie.
+  List<Calendario> fasceOrarie = [];
+
+  // Messaggio per la gestione degli errori.
+  String? message;
+
+  // Stato di caricamento.
+  bool isLoading = false;
+
+  // Subscription per ascoltare i cambiamenti in tempo reale nel database.
+  StreamSubscription? _fasceOrarieSubscription;
+
+  // Notificatore per i messaggi di errore.
+  ValueNotifier<String?> errorNotifier = ValueNotifier(null);
+
+  // Ascolta le fasce orarie di un tutor specifico.
   void listenToFasceOrarie(String tutorId, bool ruolo) {
-    // Se esiste un listener attivo, cancellalo prima di crearne uno nuovo
+    // Annulla un eventuale listener esistente.
     _fasceOrarieSubscription?.cancel();
 
-    // Crea un nuovo listener per le fasce orarie in base al nuovo tutorId
+    // Crea un nuovo listener per le fasce orarie.
     _fasceOrarieSubscription = _firebaseUtil
         .getFasceOrarieStreamByTutorId(tutorId, ruolo)
         .listen((snapshot) {
-      print("Listener attivato per un aggiornamento nel database.");
-
-      // Aggiorna la lista delle fasce orarie
+      // Aggiorna la lista delle fasce orarie dal database.
       fasceOrarie = snapshot.docs
           .map((doc) => Calendario.fromFirestore(doc.data() as Map<String, dynamic>))
           .toList();
 
-      ordinaFasceOrarie(); // Ordina le fasce orarie dopo l'aggiornamento
-      notifyListeners(); // Notifica la UI dei cambiamenti
+      // Ordina le fasce orarie e notifica i cambiamenti.
+      ordinaFasceOrarie();
+      notifyListeners();
     }, onError: (error) {
-      print("Errore nell'ascolto delle fasce orarie: $error");
+      // Gestione degli errori.
       errorNotifier.value = "Errore nel caricamento delle fasce orarie.";
       notifyListeners();
     });
   }
 
-
+  // Rimuove il listener attivo durante la distruzione dell'oggetto.
   @override
   void dispose() {
-    _fasceOrarieSubscription?.cancel(); // Cancella il listener quando l'oggetto viene distrutto
-    _fasceOrarieSubscription = null; // Imposta a null per consentire la creazione di nuovi listener in futuro
+    _fasceOrarieSubscription?.cancel();
+    _fasceOrarieSubscription = null;
     super.dispose();
   }
 
-  // funzione per ottenere data, oraInizio e oraFine per una fascia specifica
+  // Recupera i dettagli di una fascia oraria specifica.
   Future<Map<String, String>> getOrarioFascia(DocumentReference fasciaCalendarioRef) async {
     try {
+      // Ottiene i dettagli della fascia oraria.
       Calendario fascia = await _firebaseUtil.getFasciaOraria(fasciaCalendarioRef);
       return {
-        'data': '${fascia.data.toLocal().toString().split(' ')[0]}', // Mostra solo la data
+        'data': '${fascia.data.toLocal().toString().split(' ')[0]}',
         'oraInizio': fascia.oraInizio,
         'oraFine': fascia.oraFine,
       };
     } catch (e) {
-      print("Errore nel recupero dell'orario della fascia: $e");
+      // Restituisce valori predefiniti in caso di errore.
       return {
         'data': 'N/A',
         'oraInizio': 'N/A',
@@ -64,55 +75,49 @@ class CalendarioViewModel extends ChangeNotifier {
     }
   }
 
-
+  // Aggiunge una nuova fascia oraria.
   Future<void> aggiungiFasciaOraria(
       String tutorId, DateTime data, TimeOfDay oraInizio, TimeOfDay oraFine) async {
+    if (isLoading) return; // Evita richieste duplicate.
 
-    // Evita richieste duplicate se già in esecuzione
-    if (isLoading) return;
-
-    // Inizia il caricamento
     isLoading = true;
-    notifyListeners();  // Aggiorna la UI
+    notifyListeners();
 
-    // Ottieni il DocumentReference per il tutorId dal FirebaseUtil
+    // Ottiene il riferimento al tutor dal database.
     final DocumentReference tutorRef =
     (await _firebaseUtil.getTutorReference(tutorId))!;
 
-    // Formatta l'ora di inizio e fine in formato "HH:mm"
+    // Converte l'ora in formato "HH:mm".
     final String formattedOraInizio = formatTimeOfDay(oraInizio);
     final String formattedOraFine = formatTimeOfDay(oraFine);
 
-    // Crea la nuova fascia oraria usando il modello Calendario
+    // Crea la nuova fascia oraria.
     final nuovaFascia = Calendario(
-      tutorRef: tutorRef, // Usa il DocumentReference recuperato
-      data: DateTime(data.year, data.month, data.day, 0, 0, 0, 0, 0), // Solo la data senza ore
+      tutorRef: tutorRef,
+      data: DateTime(data.year, data.month, data.day),
       oraInizio: formattedOraInizio,
       oraFine: formattedOraFine,
       statoPren: false,
     );
 
-    // Prova a inserire la nuova fascia nel database
     try {
+      // Aggiunge la fascia al database.
       bool success = await _firebaseUtil.aggiungiFasciaOraria(nuovaFascia);
-      print("GGGGGGGGGGGGGGGGGGGGGGGGGGGG");
       if (success) {
-        ordinaFasceOrarie(); // Ordina la lista dopo l'aggiunta
-
+        ordinaFasceOrarie(); // Ordina le fasce dopo l'aggiunta.
       } else {
         errorNotifier.value = 'Errore nell\'aggiunta della fascia';
       }
     } catch (e) {
+      // Gestisce gli errori durante l'aggiunta.
       errorNotifier.value = 'Errore durante l\'aggiunta della fascia oraria: ${e.toString()}';
     } finally {
-      // Fine del caricamento
       isLoading = false;
-      notifyListeners();  // Notifica la UI
+      notifyListeners();
     }
   }
 
-
-  // Funzione per eliminare una fascia oraria
+  // Elimina una fascia oraria specifica.
   Future<void> eliminaFasciaOraria(String tutorId, DateTime data, String oraInizio) async {
     bool success = await _firebaseUtil.eliminaFasciaOraria(tutorId, data, oraInizio);
     if (!success) {
@@ -120,26 +125,22 @@ class CalendarioViewModel extends ChangeNotifier {
     }
   }
 
-  // Funzione di ordinamento delle fasce orarie
+  // Ordina le fasce orarie per data e ora di inizio.
   void ordinaFasceOrarie() {
     fasceOrarie.sort((a, b) {
       int dateComparison = compareDateOnly(a.data, b.data);
-      if (dateComparison != 0) {
-        return dateComparison;
-      } else {
-        return a.oraInizio.compareTo(b.oraInizio);
-      }
+      return dateComparison != 0 ? dateComparison : a.oraInizio.compareTo(b.oraInizio);
     });
   }
 
-  // Funzione per confrontare solo anno, mese, giorno delle date
+  // Confronta due date considerando solo anno, mese e giorno.
   int compareDateOnly(DateTime a, DateTime b) {
     DateTime dateA = DateTime(a.year, a.month, a.day);
     DateTime dateB = DateTime(b.year, b.month, b.day);
     return dateA.compareTo(dateB);
   }
 
-  // Funzione di supporto per formattare TimeOfDay in "HH:mm"
+  // Converte un oggetto TimeOfDay in una stringa "HH:mm".
   String formatTimeOfDay(TimeOfDay time) {
     final hours = time.hour.toString().padLeft(2, '0');
     final minutes = time.minute.toString().padLeft(2, '0');

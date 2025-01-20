@@ -41,30 +41,36 @@ class HomeStudenteViewModel extends ChangeNotifier {
 
         // Carica i nomi dei tutor da valutare.
         for (String tutorId in _utente!.tutorDaValutare) {
-          String nomeCognome = await _firebaseUtil.getNomeDaRef(tutorId);
-          _tutorNomi[tutorId] = nomeCognome;
+          try {
+            // Chiamata a _firebaseUtil per verificare e ottenere i dati del tutor.
+            String? nomeCognome = await _firebaseUtil.getNomeDaRef(tutorId);
+            if (nomeCognome != null) {
+              _tutorNomi[tutorId] = nomeCognome;
+            } else {
+              // Caso in cui il tutor non esiste.
+              print("Utente non trovato per tutorId: $tutorId");
+            }
+          } catch (e) {
+            // Gestione degli errori per un tutor specifico.
+            print("Errore durante il caricamento del tutor $tutorId: $e");
+          }
         }
       } else {
         // Gestione del caso in cui i dati dell'utente non siano trovati.
-        print("Dati dell'utente non trovati.");
+        print("Dati dell'utente non trovati per userId: $userId");
       }
-
-      // Aggiorna lo stato di caricamento e notifica i listener.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _isLoading = false;
-        notifyListeners();
-      });
     } catch (e) {
       // Gestione degli errori durante il caricamento dell'utente.
       print("Errore durante il caricamento dell'utente: $e");
-
-      // Aggiorna lo stato di caricamento anche in caso di errore.
+    } finally {
+      // Aggiorna lo stato di caricamento e notifica i listener.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _isLoading = false;
         notifyListeners();
       });
     }
   }
+
 
   // Funzione per salvare il feedback di un tutor e rimuoverlo dalla lista locale.
   Future<void> salvaFeedback(String tutorId, int feedback) async {

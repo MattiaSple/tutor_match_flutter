@@ -121,6 +121,12 @@ class _InChatPageState extends State<InChatPage>
                   itemBuilder: (context, index) {
                     final message = messages[index];
                     bool isMine = message.senderId == userEmail; // Determina se il messaggio è dell'utente corrente.
+                    String time = DateTime.fromMillisecondsSinceEpoch(message.timestamp).toString();
+
+                    // Separiamo la stringa per ottenere solo la parte desiderata (anno, mese, giorno, ore, minuti)
+                    List<String> parts = time.split(' '); // Dividi la data e l'ora in base agli spazi
+
+                    String formattedTime = parts[0] + ' ' + parts[1].substring(0, 5); // Aggiungi data e ora (senza secondi e millisecondi)
 
                     return FutureBuilder<String>(
                       future: inChatViewModel.getSenderNameByEmail(message.senderId), // Recupera il nome del mittente.
@@ -160,7 +166,7 @@ class _InChatPageState extends State<InChatPage>
                                 ),
                                 const SizedBox(height: 5),
                                 Text(
-                                  DateTime.fromMillisecondsSinceEpoch(message.timestamp).toString(), // Mostra data e ora del messaggio.
+                                  formattedTime, // Mostra data e ora del messaggio.
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: isMine ? Colors.white60 : Colors.black54,

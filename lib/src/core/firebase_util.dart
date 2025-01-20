@@ -182,9 +182,17 @@ class FirebaseUtil {
   Future<void> aggiungiFeedback(String tutorId, int feedback) async {
     try {
       DocumentReference tutorRef = _firestore.collection('utenti').doc(tutorId);
+      // Leggi il documento attuale
+      DocumentSnapshot tutorSnapshot = await tutorRef.get();
+      // Ottieni l'array di feedback attuale
+      List<dynamic> feedbackCorrente = (tutorSnapshot.data() as Map<String, dynamic>)['feedback'] ?? [];
 
+      // Aggiungi il nuovo feedback alla lista
+      feedbackCorrente.add(feedback);
+
+      // Aggiorna l'array nel database
       await tutorRef.update({
-        'feedback': FieldValue.arrayUnion([feedback]) // Aggiungi il feedback alla lista
+        'feedback': feedbackCorrente,
       });
     } catch (e) {
       print('Errore durante l\'aggiunta del feedback: $e');
@@ -444,5 +452,9 @@ class FirebaseUtil {
       print("Errore nel recupero del nome da email: $e");
       throw e;
     }
+  }
+
+  Future<DocumentSnapshot> getDocumentById(String tutorId) async {
+    return await FirebaseFirestore.instance.collection('tutors').doc(tutorId).get();
   }
 }

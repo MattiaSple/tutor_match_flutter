@@ -1,16 +1,17 @@
-# tutormatch
+# TutorMatch (versione Flutter)
 
-A new Flutter project.
+Versione più leggera dell'app TutorMatch, realizzata in Flutter: mette in contatto tutor e studenti, con ricerca del tutor più vicino, prenotazione delle lezioni e gestione del calendario.
 
-## Getting Started
+La versione completa e più dettagliata, sviluppata in Kotlin, è qui:
+[TutorMatch](https://github.com/MattiaSple/TutorMatch)
 
-This project is a starting point for a Flutter application.
+## Tecnologie
+- Flutter (Dart)
 
-A few resources to get you started if this is your first Flutter project:
+## Stato del progetto
+⚠️ Il database di backend non è più collegato: l'app non è eseguibile così com'è.
+Il codice resta consultabile come riferimento.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Autori
+- Mattia Splendiani ([@MattiaSple](https://github.com/MattiaSple))
+- [@FilErc](https://github.com/FilErc)
